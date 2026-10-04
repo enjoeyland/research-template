@@ -31,3 +31,11 @@ train: ## Train with default config
 
 analyze: ## Post-hoc analysis (src/analyze.py)
 	python src/analyze.py
+
+rename: ## Set the project name everywhere:  make rename NAME=my-project
+	@echo "$(NAME)" | grep -Eq '^[A-Za-z0-9._-]+$$' || { echo "usage: make rename NAME=<project-name>   (letters, digits, . _ -)"; exit 1; }
+	sed -i '1s/.*/# $(NAME)/' README.md
+	sed -i 's/^name: .*/name: $(NAME)/' environment.yaml
+	sed -i 's/^PROJECT_NAME=.*/PROJECT_NAME=$(NAME)/' .env.example
+	@if [ -f .env ]; then sed -i 's/^PROJECT_NAME=.*/PROJECT_NAME=$(NAME)/' .env; fi
+	@echo "project name -> $(NAME)  (README title, environment.yaml, .env.example/.env PROJECT_NAME)"

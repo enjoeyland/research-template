@@ -3,16 +3,23 @@
 # Source from scripts/sbatch/:    source "$(dirname "$0")/common/env.sh"
 #
 # Sets: REPO_ROOT, VENV, PYTHON, CKPT_ROOT; cds to REPO_ROOT; activates venv if present.
-# Does NOT source the project .env wholesale (it may hold API keys) — only VENV and CHECKPOINT_DIR.
+# Does NOT source the project .env wholesale (it may hold API keys) — only PROJECT_NAME, VENV and CHECKPOINT_DIR.
 
 _ENV_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${_ENV_DIR}/../../.." && pwd)"
 cd "$REPO_ROOT"
 
-# venv: $VENV env var > VENV= in .env > /scratch2/$USER/venvs/<repo folder name>
+# Read ONE variable from .env with its ${...} references expanded (e.g. CHECKPOINT_DIR=/lustre/${USER}/.../${PROJECT_NAME}).
+# Only PROJECT_NAME, CHECKPOINT_DIR and VENV are evaluated (never the whole file, it may hold API keys).
+_dotenv() {
+  ( eval "$(grep -E '^(PROJECT_NAME|CHECKPOINT_DIR|VENV)=' .env 2>/dev/null || true)"; printf '%s' "${!1:-}" )
+}
+
+# venv: $VENV env var > VENV= in .env > /scratch2/$USER/venvs/<PROJECT_NAME in .env | repo folder name>
 if [[ -z "${VENV:-}" ]]; then
-  VENV="$(grep -E '^VENV=' .env 2>/dev/null | tail -1 | cut -d= -f2- || true)"
-  VENV="${VENV:-/scratch2/${USER}/venvs/$(basename "${REPO_ROOT}")}"
+  VENV="$(_dotenv VENV)"
+  PROJECT_NAME="${PROJECT_NAME:-$(_dotenv PROJECT_NAME)}"
+  VENV="${VENV:-/scratch2/${USER}/venvs/${PROJECT_NAME:-$(basename "${REPO_ROOT}")}}"
 fi
 PYTHON="${VENV}/bin/python"
 
@@ -26,7 +33,7 @@ else
   PYTHON="$(command -v python3 || command -v python)"
 fi
 
-CKPT_ROOT="$(grep -E '^CHECKPOINT_DIR=' .env 2>/dev/null | tail -1 | cut -d= -f2- || true)"
+CKPT_ROOT="$(_dotenv CHECKPOINT_DIR)"
 CKPT_ROOT="${CKPT_ROOT:-logs}"
 
 mkdir -p "logs/slurm/$(date +%Y-%m-%d)"

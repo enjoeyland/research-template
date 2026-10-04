@@ -37,8 +37,8 @@ def test_eval_config(cfg_eval: DictConfig) -> None:
     hydra.utils.instantiate(cfg_eval.trainer)
 
 
-def test_wandb_project_defaults_to_repo_folder_and_env_overrides(monkeypatch) -> None:
-    """Default wandb project = the repo folder name (so a copied template names itself); WANDB_PROJECT wins."""
+def test_wandb_project_comes_from_env_then_project_name_then_repo_folder(monkeypatch) -> None:
+    """WANDB_PROJECT > PROJECT_NAME (.env) > the repo folder name."""
     from pathlib import Path
 
     import rootutils
@@ -49,14 +49,20 @@ def test_wandb_project_defaults_to_repo_folder_and_env_overrides(monkeypatch) ->
 
     root = rootutils.find_root(indicator=".project-root")
     monkeypatch.setenv("PROJECT_ROOT", str(root))
-    for env, expected in ((None, Path(root).name), ("my-project", "my-project")):
-        monkeypatch.delenv("WANDB_PROJECT", raising=False)
-        if env:
-            monkeypatch.setenv("WANDB_PROJECT", env)
+    cases = (
+        ({}, Path(root).name),
+        ({"PROJECT_NAME": "my-project"}, "my-project"),
+        ({"PROJECT_NAME": "my-project", "WANDB_PROJECT": "other"}, "other"),
+    )
+    for env, expected in cases:
+        for var in ("WANDB_PROJECT", "PROJECT_NAME"):
+            monkeypatch.delenv(var, raising=False)
+        for var, value in env.items():
+            monkeypatch.setenv(var, value)
         GlobalHydra.instance().clear()
         with initialize(version_base="1.3", config_path="../configs"):
             cfg = compose(config_name="train.yaml", overrides=["logger=wandb"])
-            assert cfg.logger.wandb.project == expected
+            assert cfg.logger.wandb.project == expected, env
     GlobalHydra.instance().clear()
 
 
