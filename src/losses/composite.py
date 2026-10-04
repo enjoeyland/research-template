@@ -27,7 +27,6 @@ class CompositeLoss(nn.Module):
             assert isinstance(spec["term"], LossTerm), f"terms.{name}.term must be a LossTerm"
             self.terms[name] = spec["term"]
             self.weights[name] = float(spec.get("weight", 1.0))
-        self._checked = False
 
     def _check_requires(self, outputs: Any) -> None:
         for name, term in self.terms.items():
@@ -39,11 +38,10 @@ class CompositeLoss(nn.Module):
                     f"loss term '{name}' ({type(term).__name__}) requires {missing} in the model output, "
                     f"but the model did not provide them (put them in ModelOutput / ModelOutput.extras)"
                 )
-        self._checked = True
 
     def forward(self, outputs: Any, batch: Any) -> Dict[str, torch.Tensor]:
-        if not self._checked:
-            self._check_requires(outputs)
+        # every call: the fields a model provides can differ between training and eval (e.g. extra passes)
+        self._check_requires(outputs)
         total = None
         result: Dict[str, torch.Tensor] = {}
         for name, term in self.terms.items():

@@ -95,3 +95,13 @@ def test_metric_reads_configured_keys_and_skips_missing_stream() -> None:
     assert float(group.metrics_valid["gt/acc"].compute()) == 1.0  # read gt_preds, not preds
     # stream absent -> nothing logged
     assert group.on_step("test", ModelOutput(preds=target, target=target), None, 0) == {}
+
+
+def test_field_mean_logs_a_diagnostic_and_skips_when_absent() -> None:
+    from src.metrics import FieldMean
+
+    metric = FieldMean("floor")
+    assert metric.on_step("val", ModelOutput(), None, 0) is None  # absent -> nothing logged
+    for v in (1.0, 3.0):
+        assert metric.on_step("val", ModelOutput(extras={"floor": torch.tensor(v)}), None, 0) is metric
+    assert float(metric.on_epoch_end("val")) == 2.0
