@@ -24,5 +24,5 @@ python src/train.py experiment/train=toy/261004_example/261004-toy-example
 
 ## 새 실험 만들기
 
-비교군 config를 복사해서 **바꾸는 키를 최소로**(한 arm에 변경 하나, CLAUDE.md §4.2) 하고, 헤더에 어느 config 대비 무엇이
+비교군 config를 복사해서 **바꾸는 키를 최소로**(한 실험에 변경 하나, CLAUDE.md §4.2) 하고, 헤더에 어느 config 대비 무엇이
 다른지 적는다. 새 주제는 `<YYMMDD_topic>/` 폴더를 새로 만든다.
