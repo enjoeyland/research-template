@@ -92,14 +92,11 @@ srun --partition="$SLURM_PARTITION" --qos="$SLURM_QOS" --gres="$SLURM_GRES" \
   결정 기록은 `docs/adr/`. 파일명은 `YYMMDD_주제.md`. **`proposals/`에는 실험 결과(실측 수치, 예상과의 비교)를
   쓰지 않고 `experiments/`에만 쓴다.**
 
-## 3. ADR (Architecture Decision Record) 작성
+## 3. 문서화
 
-`docs/adr/`에 프로젝트의 굵직한 아키텍처/방법론 결정을 기록한다. 규칙과 템플릿은 `docs/adr/README.md` 참고.
-
-굵직한 결정 — 알고리즘 선택, 모델 백본 교체, 파이프라인 구조 변경처럼 되돌리기 어렵거나 프로젝트 방향에
-영향이 큰 결정 — 을 내리게 되면, 그 결정이 확정된 직후 `docs/adr/YYMMDD-adr-주제.md` 형식으로 ADR을
-작성(또는 제안)할 것. 실험 config 조정, 하이퍼파라미터 튜닝처럼 작은 결정은 대상이 아니다. 애매하면 작성
-여부를 사용자에게 먼저 물어본다.
+설계 결정을 내렸거나, 실험을 돌렸거나, 조사가 필요했던 코드 수정을 끝냈으면 **`docs/README.md`를 확인해서 해당하는 폴더에 문서화**한다
+(`proposals/` 설계·예상, `experiments/` 실행 결과, `implementation/` 코드 수정 이야기, `adr/` 굵직한 결정). 새 문서는 그 폴더의
+`_TEMPLATE.md`를 복사해서 시작한다. 어디에 어떻게 쓸지 애매하거나, 문서화할 만한 일인지 애매하면 사용자에게 먼저 물어본다.
 
 ## 4. 실험 진행 형식
 
