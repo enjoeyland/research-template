@@ -138,6 +138,7 @@ srun --partition="$SLURM_PARTITION" --qos="$SLURM_QOS" --gres="$SLURM_GRES" \
   옛 체크포인트를 분석할 땐 그 시점 값을 명시적으로 넘길 것.
 - **checkpoint 재개/평가** — torch>=2.6은 `torch.load` 기본값이 `weights_only=True`라 hparams에 든
   `omegaconf.ListConfig` 등을 못 읽는다. 우리 자신의 체크포인트는 `weights_only=False`로 읽는다.
+
 ## 5. 실험 결과 보고 형식
 
 실험(학습/분석 잡)이 끝나고 사용자에게 결과를 알려줄 때는 아래 6가지를 **전부** 포함해서
