@@ -2,9 +2,9 @@
 # MAX_GPUS     — max concurrent SLURM array tasks (= concurrent GPU allocations).
 #                Appends %MAX_GPUS to --array (e.g. 0-14%4). Unset = no throttle.
 #
-#   JOBS_PER_GPU=1 ./scripts/isic2024_train.sh
-#   JOBS_PER_GPU=3 PROFILE=gpu96 ./scripts/isic2024_train.sh
-#   MAX_GPUS=4 ./scripts/dsprites_train.sh
+#   JOBS_PER_GPU=1 ./scripts/my_model_train.sh
+#   JOBS_PER_GPU=3 PROFILE=gpu96 ./scripts/my_model_train.sh
+#   MAX_GPUS=4 ./scripts/my_model_train.sh
 #
 # Source after SEEDS (or any item count) is known, before maybe_submit:
 #   : "${JOBS_PER_GPU:=1}"

@@ -9,7 +9,7 @@ experiment/
 
 ## train/ 계층
 
-- `<model>` — 모델 계열(예: `toy`, `milk10k_scm_cascade`). 같은 `configs/model/*.yaml`을 쓰는 실험끼리
+- `<model>` — 모델 계열(예: `toy`, `resnet`, `my_model`). 같은 `configs/model/*.yaml`을 쓰는 실험끼리
   묶는다. 스윕 스크립트 하나(`scripts/<model>_train.sh`)가 한 model을 담당한다 (CLAUDE.md §1).
 - `<YYMMDD_topic>` — 실험 주제(한 질문을 확인하려고 묶어 돌린 실험 모음). 폴더 이름의 날짜는 시작일.
 - `<YYMMDD-name>.yaml` — 파일 이름(확장자 제외)이 곧 `experiment_name`이다. 체크포인트는

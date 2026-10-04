@@ -1,4 +1,4 @@
-# ~96GB VRAM (RTX PRO 6000 Blackwell) — medical_ccg venv (cu128) required
+# ~96GB VRAM (RTX PRO 6000 Blackwell) — a cu128 venv is required
 # Src: ImgEdit run_train_array_2pergpu.sh; suma_pro6000 retired → gigabyte_pro6000
 PROFILE_NAME=gpu96
 SLURM_PARTITION=asus_pro6000,gigabyte_pro6000
