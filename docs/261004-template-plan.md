@@ -107,7 +107,7 @@ research-template/
 3. `NamedLastModelCheckpoint` + `model_checkpoint_last.yaml` + `progress_bar.yaml`.
 4. `weights_only=False` (train fit/test, eval) — torch≥2.6 재개/테스트 실패 방지.
 5. `seed is not None` 체크, eval.yaml에 `experiment/train` 그룹·`seed` 선언, tests/conftest 절대 batch 수.
-6. `src/metrics/metric_base.py` + `tests/test_metrics.py` (수동 `.reset()` 금지 규칙을 테스트로 고정).
+6. `src/metrics/metric_base.py`(+ 최소 `classification.py`) + `tests/test_metrics.py` — 구현 완료 (수동 `.reset()` 금지 규칙을 테스트로 고정)
 7. `analyze.py`/`compare_experiments.py`는 도메인 로직 없이 엔트리포인트 골격만.
 
 ### 2-B. SLURM (그대로 복사, 사용자 결정)
