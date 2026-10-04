@@ -81,22 +81,5 @@ repos:
     hooks:
       - id: codespell
         args:
-          - --skip=logs/**,data/**,*.ipynb
+          - --skip=logs/**,data/**
           # - --ignore-words-list=abc,def
-
-  # jupyter notebook cell output clearing
-  - repo: https://github.com/kynan/nbstripout
-    rev: 0.6.1
-    hooks:
-      - id: nbstripout
-
-  # jupyter notebook linting
-  - repo: https://github.com/nbQA-dev/nbQA
-    rev: 1.6.3
-    hooks:
-      - id: nbqa-flake8
-        args:
-          [
-            "--extend-ignore=E203,E402,E501,F401,F841",
-            "--exclude=logs/*,data/*",
-          ]
