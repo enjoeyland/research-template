@@ -67,12 +67,15 @@ run_one () {
     WANDB_ARGS=(+logger.wandb.name="${wandb_name}" logger.wandb.group="${WANDB_GROUP}")
   fi
 
+  # mid-run resume + wandb run id (scripts/sbatch/common/resume.sh): fills RESUME_ARGS
+  prepare_resume "${exp_name}" "${fold}" "${wandb_name}"
+
   echo "=== train: experiment=${experiment} fold=${fold} ==="
   python src/train.py experiment/train="${experiment}" seed="${fold}" data.fold="${fold}" \
     experiment_name="${exp_name}" \
     trainer="${TRAINER}" \
     logger="${LOGGER:-wandb}" ${LOGGER:+extras.enforce_tags=False} \
-    "${WANDB_ARGS[@]}"
+    "${WANDB_ARGS[@]}" "${RESUME_ARGS[@]}"
 
   if ! seed_ckpt_exists "${exp_name}" "${fold}"; then
     echo "error: no checkpoint for fold=${fold} under $(checkpoint_dir "${exp_name}")" >&2
@@ -93,5 +96,7 @@ run_analyze () {
   done
 }
 
+# shellcheck disable=SC1091
+source "${_SBATCH}/common/resume.sh"
 # shellcheck disable=SC1091
 source "${_SBATCH}/common/launch_sweep.sh"

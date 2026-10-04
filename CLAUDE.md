@@ -41,6 +41,10 @@
   (안 물어보고 만들었다가 "delete once submitted"라 스스로 적어놓고도 정리 안 한 적 있음)
   **다른 세션이 지금 같은 캐노니컬 스크립트로 job을 돌리고 있어도 충돌을 고려하지 말 것 — 캐노니컬
   스크립트의 `JOB_NAME`/`CONFIG_DIR`/`EXPERIMENT_NAME`을 그냥 덮어쓰고 새로 제출할 것.**
+- **중단된 학습 재개**: 긴 런은 실험 config에서 `override /callbacks: default_resumable`을 골라 둔다(10 epoch마다
+  `seed<N>_resume.ckpt` 덮어쓰기). job이 죽으면 **같은 명령으로 재제출만** 하면 스윕 스크립트의 `prepare_resume`
+  (`scripts/sbatch/common/resume.sh`)이 그 체크포인트를 `ckpt_path`로, 저장된 wandb id(`wandb_id_seed<N>.txt`)를
+  `+logger.wandb.id`로 넘겨 같은 wandb run에 이어 쓴다. wandb에서 run을 지울 때는 체크포인트 폴더의 id 파일도 같이 지울 것.
 - **제출 후 확인**: `squeue`로 실제 RUNNING인지, slurm 로그에 `config=`가 찍히는지 본 뒤에 "돌고 있다"고
   보고한다. `scancel`은 job ID로만 한다. sbatch `--output`은 세션 로컬 `/tmp`가 아니라 클러스터 공유 경로
   (이 repo 안, `logs/slurm/...`)로 잡는다 — 컴퓨트 노드의 `/tmp`는 로그인 노드와 다른 디스크다.
