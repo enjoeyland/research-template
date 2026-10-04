@@ -79,7 +79,8 @@ def cfg_train(cfg_train_global: DictConfig, tmp_path: Path) -> DictConfig:
     with open_dict(cfg):
         cfg.paths.output_dir = str(tmp_path)
         cfg.paths.log_dir = str(tmp_path)
-        # ckpt_dir defaults to <log_dir>/<task>/runs/<experiment_name>/checkpoints; pin it for the tests
+        # exp_dir / ckpt_dir default to <log_dir>/runs/<experiment_name>[/checkpoints]; pin them for the tests
+        cfg.paths.exp_dir = str(tmp_path)
         cfg.paths.ckpt_dir = str(tmp_path / "checkpoints")
 
     yield cfg
@@ -104,7 +105,8 @@ def cfg_eval(cfg_eval_global: DictConfig, tmp_path: Path) -> DictConfig:
     with open_dict(cfg):
         cfg.paths.output_dir = str(tmp_path)
         cfg.paths.log_dir = str(tmp_path)
-        # ckpt_dir defaults to <log_dir>/<task>/runs/<experiment_name>/checkpoints; pin it for the tests
+        # exp_dir / ckpt_dir default to <log_dir>/runs/<experiment_name>[/checkpoints]; pin them for the tests
+        cfg.paths.exp_dir = str(tmp_path)
         cfg.paths.ckpt_dir = str(tmp_path / "checkpoints")
 
     yield cfg

@@ -15,13 +15,14 @@ OmegaConf.register_new_resolver("basename", lambda path: Path(str(path)).name, r
 
 
 def link_checkpoints_dir(cfg: DictConfig) -> None:
-    """Symlink ``<output_dir>/checkpoints`` -> ``<ckpt_dir>`` so a run's local log folder shows its
-    checkpoints too, even when ``CHECKPOINT_DIR`` redirects them to shared/large storage.
+    """Symlink ``<exp_dir>/checkpoints`` -> ``<ckpt_dir>`` so the experiment folder ``logs/runs/<experiment>/``
+    shows its checkpoints next to ``train/``, ``eval/`` and ``analyze/``, even when ``CHECKPOINT_DIR`` redirects
+    them to long-term storage.
 
-    No-op if ``ckpt_dir`` already *is* ``<output_dir>/checkpoints`` (the default when
-    ``CHECKPOINT_DIR`` isn't set) or if the link already exists.
+    No-op if ``ckpt_dir`` already *is* ``<exp_dir>/checkpoints`` (the default when ``CHECKPOINT_DIR`` isn't
+    set) or if the link already exists.
 
-    Multiple seeds of one experiment share one ``output_dir`` and may start concurrently, so the
+    Multiple seeds of one experiment share one ``exp_dir`` and may start concurrently, so the
     exists-check and ``symlink_to()`` are not atomic as a pair; losing that race is not an error
     (the link exists now, pointing at the same target), so ``FileExistsError`` is swallowed.
 
@@ -31,9 +32,9 @@ def link_checkpoints_dir(cfg: DictConfig) -> None:
     ``FileExistsError`` (``isdir()`` follows the dangling link, sees False, and ``mkdir()`` collides
     with the symlink).
     """
-    output_dir = Path(cfg.paths.output_dir)
+    exp_dir = Path(cfg.paths.exp_dir)
     ckpt_dir = Path(cfg.paths.ckpt_dir)
-    link = output_dir / "checkpoints"
+    link = exp_dir / "checkpoints"
     if ckpt_dir != link:
         ckpt_dir.mkdir(parents=True, exist_ok=True)
     if ckpt_dir == link or link.is_symlink() or link.exists():

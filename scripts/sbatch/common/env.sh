@@ -39,7 +39,7 @@ unset _ENV_DIR
 
 checkpoint_dir() {
   local experiment="${1:?}"
-  echo "${CKPT_ROOT}/train/runs/${experiment}/checkpoints"
+  echo "${CKPT_ROOT}/runs/${experiment}/checkpoints"
 }
 
 seed_ckpt_path() {

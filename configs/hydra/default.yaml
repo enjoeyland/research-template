@@ -5,12 +5,12 @@ defaults:
   - override hydra_logging: colorlog
   - override job_logging: colorlog
 
-# One clean folder per experiment (logs/train/runs/<exp>/).
+# One folder per experiment (logs/runs/<exp>/), one sub folder per task (train / eval / analyze).
 # Seeds share this dir; checkpoint / analyze filenames carry seed${seed}_…
 run:
-  dir: ${paths.log_dir}/${task_name}/runs/${experiment_name}
+  dir: ${paths.exp_dir}/${task_name}
 sweep:
-  dir: ${paths.log_dir}/${task_name}/multiruns/${now:%Y-%m-%d}_${now:%H-%M-%S}
+  dir: ${paths.log_dir}/multiruns/${now:%Y-%m-%d}_${now:%H-%M-%S}
   subdir: ${hydra.job.num}
 
 job_logging:

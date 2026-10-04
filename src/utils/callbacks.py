@@ -77,3 +77,19 @@ class MetricTrends(Callback):
     def load_state_dict(self, state_dict: dict) -> None:
         self.best = state_dict.get("best")
         self._last_val = state_dict.get("last_val")
+
+
+class ResumeModelCheckpoint(ModelCheckpoint):
+    """The mid-run resume checkpoint (``configs/callbacks/model_checkpoint_resume.yaml``).
+
+    Lightning derives a ``ModelCheckpoint``'s ``state_key`` from (monitor, mode, every_n_train_steps, every_n_epochs,
+    train_time_interval) and refuses to start when two of them are equal. The "last" checkpoint saves every
+    ``trainer.max_epochs`` epochs and this one every 10, so for ``max_epochs == 10`` the keys collided
+    (``RuntimeError: Found more than one stateful callback of type ModelCheckpoint``) -- found with the toy example, the
+    only config whose max_epochs equals the resume interval. A fixed, distinct key removes the collision for any
+    max_epochs.
+    """
+
+    @property
+    def state_key(self) -> str:
+        return "ModelCheckpoint{resume}"

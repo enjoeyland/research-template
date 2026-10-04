@@ -3,9 +3,10 @@
 # Copy to scripts/, edit axes + run_one / run_analyze, keep the launch_sweep line.
 #
 # Layout (one folder per experiment):
-#   logs/train/runs/<experiment>/checkpoints/seed<N>_epoch_XXX.ckpt
-#   logs/analyze/runs/<experiment>/*.{csv,png}   -- mean +/- std over all seeds, aggregated
-#                                                    once per experiment (not per-seed files)
+#   logs/runs/<experiment>/checkpoints/seed<N>_epoch_XXX.ckpt
+#   logs/runs/<experiment>/train/    -- hydra config, log file, csv metrics
+#   logs/runs/<experiment>/analyze/  -- csv/png, mean +/- std over all seeds, aggregated
+#                                       once per experiment (not per-seed files)
 #
 # Submit: one command queues a train array, then an analyze job with
 #   --dependency=afterok:<train_job> (ANALYZE_PROFILE=cpu by default). No ckpt polling.
@@ -91,8 +92,7 @@ run_analyze () {
   for experiment in "${EXPERIMENTS[@]}"; do
     echo "=== analyze: experiment=${experiment} folds=[${folds_csv}] ==="
     python src/analyze.py experiment/train="${experiment}" seeds="[${folds_csv}]" \
-      experiment_name="${experiment##*/}" \
-      paths.ckpt_dir="$(checkpoint_dir "${experiment##*/}")"
+      experiment_name="${experiment##*/}"
   done
 }
 

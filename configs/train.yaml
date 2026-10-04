@@ -32,7 +32,7 @@ defaults:
 # task name, determines output directory path
 task_name: "train"
 
-# name of the experiment directory under logs/<task_name>/runs/<experiment_name>/.
+# name of the experiment directory: logs/runs/<experiment_name>/ (train/ eval/ analyze/ checkpoints/).
 # defaults to a timestamp; override via experiment config or CLI (experiment_name=...).
 # Keep it equal to the experiment config stem for a clean runs/ listing.
 # Seeds are NOT separate folders -- they go into checkpoint filenames (seed${seed}_epoch_...).

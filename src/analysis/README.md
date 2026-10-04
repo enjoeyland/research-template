@@ -6,4 +6,4 @@
 - 주제별로 `<YYMMDD_topic>/` 폴더를 만든다.
 - 새로 만들기 전에 이 폴더를 먼저 훑어서 비슷한 게 있는지 확인한다. 있으면 옵션을 추가하는 쪽으로 합친다.
 - 학습 직후 자동으로 돌릴 분석은 스윕 스크립트의 `run_analyze()`에 넣는다 (`scripts/sbatch/template.sh`).
-- 결과는 `logs/analyze/runs/<experiment_name>/`에 쓰고, 정리된 표만 `results/`로 옮긴다.
+- 결과는 `logs/runs/<experiment_name>/analyze/`에 쓴다(학습·체크포인트와 같은 실험 폴더). 문서에 실을 그림만 `docs/figures/`로 복사한다.

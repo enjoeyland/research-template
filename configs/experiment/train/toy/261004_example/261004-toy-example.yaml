@@ -11,7 +11,7 @@ defaults:
   - override /model: toy
   - override /callbacks: default_resumable   # mid-run resume checkpoint (every 10 epochs), see model_checkpoint_resume.yaml
 
-experiment_name: 261004-toy-example   # = file stem -> logs/train/runs/261004-toy-example/
+experiment_name: 261004-toy-example   # = file stem -> logs/runs/261004-toy-example/
 tags: ["toy"]
 
 trainer:

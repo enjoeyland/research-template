@@ -1,7 +1,7 @@
 """Post-hoc analysis entry point (skeleton).
 
 Loads the checkpoints of one experiment (``seed*_last.ckpt`` under ``paths.ckpt_dir``) and writes
-tables / plots to ``logs/analyze/runs/<experiment_name>/``. Put reusable analysis code in
+tables / plots to ``logs/runs/<experiment_name>/analyze/`` (next to ``train/`` and ``checkpoints/``). Put reusable analysis code in
 ``src/analysis/<YYMMDD_topic>/`` (see src/analysis/README.md) and call it from here.
 
     python src/analyze.py experiment/train=<name> seeds=[0,1,2]

@@ -4,24 +4,23 @@
 # `experiment/train=<name>` resolves the same paths.ckpt_dir (= checkpoints of that experiment).
 
 defaults:
+  - _self_
   - data: toy
   - model: toy
+  - callbacks: null
+  - logger: null
   - trainer: default
   - paths: default
   - extras: default
   - hydra: default
   - experiment/train: null
   - optional local: default
-  - _self_  # last, so the overrides below win
 
 task_name: "analyze"
 experiment_name: ${paths.run_id}
 tags: ["dev"]
 seed: 0
 
-# checkpoints written by train.py are looked up in the *train* run dir, not this analyze run dir
+# seeds whose checkpoints (paths.ckpt_dir/seed<N>_*.ckpt, written by train.py) are analyzed
 seeds: [0]
-
-paths:
-  # checkpoints live in the *train* run dir, not in this analyze run dir
-  ckpt_dir: ${oc.env:CHECKPOINT_DIR,${paths.log_dir}}/train/runs/${experiment_name}/checkpoints
+# analysis outputs go to ${paths.exp_dir}/analyze, next to train/ and checkpoints/ of the same experiment

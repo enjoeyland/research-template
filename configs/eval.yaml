@@ -4,6 +4,9 @@ defaults:
   - _self_
   - data: toy # choose datamodule with `test_dataloader()` for evaluation
   - model: toy
+  # experiment configs are shared with train.py and may override these groups, so every group they can
+  # override must exist here too (unused by eval.py)
+  - callbacks: null
   - logger: null
   - trainer: default
   - paths: default

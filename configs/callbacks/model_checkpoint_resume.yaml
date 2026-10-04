@@ -5,7 +5,7 @@
 # `ckpt_path` (optimizer / scheduler state included) together with the stored wandb run id.
 # monitor: null -> saved unconditionally, independent of any metric improving (see model_checkpoint_last.yaml).
 model_checkpoint_resume:
-  _target_: lightning.pytorch.callbacks.ModelCheckpoint
+  _target_: src.utils.callbacks.ResumeModelCheckpoint # own state_key: see its docstring (max_epochs == 10 collision)
   dirpath: ${paths.ckpt_dir}
   filename: "seed${seed}_resume"
   monitor: null
