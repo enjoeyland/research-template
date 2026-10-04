@@ -81,7 +81,35 @@ research-template/
 **검증 도구**
 - 포맷터·pre-commit·CI 품질 워크플로는 두지 않는다(두 프로젝트 모두 훅이 설치되지 않아 실제로는 돌지 않았다). 테스트는 `pytest`(`make test`).
 
-### 3. 의도적으로 넣지 않은 것
+### 3. 사용법 (최상위 `README.md`는 프로젝트 README로 교체되므로 여기가 기준)
+
+**새 프로젝트 시작 체크리스트**
+1. 이 repo를 복사해서 새 repo를 만든다(GitHub "Use this template" 또는 `git clone` 후 remote 교체).
+2. 프로젝트 이름을 정한다: `make rename NAME=<project-name>`(README 제목, `environment.yaml`, `.env.example`의 `PROJECT_NAME`을 바꾼다).
+   그다음 `cp .env.example .env`. `PROJECT_NAME` 한 줄이 체크포인트 폴더(`CHECKPOINT_DIR`), sbatch venv 이름, wandb project 기본값을 정한다.
+3. `/scratch2/$USER/venvs/<PROJECT_NAME>`에 venv를 만들고 `requirements.txt`를 설치한다(GPU 클러스터에서는 torch를 먼저, 헤더 설명 참고).
+4. 예제(toy)를 내 것으로 교체한다: `src/data/toy_datamodule.py`, `src/models/toy_module.py`, `configs/{data,model,metrics,losses}/toy*.yaml`,
+   `configs/experiment/train/toy/`, `configs/hparams_search/toy_optuna.yaml`. 모델 config에는 `metrics`(`monitor_metric`/`monitor_mode` 포함)와 `loss`를 유지한다.
+5. `CLAUDE.md` §8(프로젝트별 메모)과 `docs/CONTEXT.md`를 채운다. 외부 코드는 `third_party/`에 submodule로 추가한다.
+6. `make test`.
+
+**실행** (GPU 클러스터에서는 로그인 노드에서 직접 돌리지 말고 `srun`/`sbatch`, CLAUDE.md §1)
+```bash
+python src/train.py experiment/train=toy/261004_example/261004-toy-example                      # 학습 + 테스트
+python src/train.py experiment/train=toy/261004_example/261004-toy-example debug=smoke logger=csv  # smoke test (logs/smoke/)
+python src/eval.py  experiment/train=toy/261004_example/261004-toy-example ckpt_path=<ckpt>      # 평가
+./scripts/sbatch/template.sh                                                                     # 스윕 예시 (scripts/<model>_train.sh로 복사해서 사용)
+make test                                                                                        # 느린 테스트 제외
+```
+
+**Skills (선택)**: 저장소에 복사하지 않고 필요할 때 설치한다(`npx skills add <source>`).
+
+| skill | 출처 | 용도 |
+|---|---|---|
+| `ce-ideate`, `ce-ideate-with-docs` | `everyinc/compound-engineering-plugin` | 아이디어 발산/정리 |
+| `domain-modeling`, `grill-with-docs`, `improve-codebase-architecture`, `setup-matt-pocock-skills` | `mattpocock/skills` | 용어/설계 정리, 구조 개선 |
+
+### 4. 의도적으로 넣지 않은 것
 MNIST 예제(합성 toy 예제로 대체), notebooks, `setup.py`, 사용하지 않는 로거(aim/comet/neptune/mlflow), release-drafter/dependabot/codecov,
 JointDLM식 `results.py`, 실험 비교 스크립트(`compare_experiments.py`), skills 복사본(목록만 README에 기록).
 
@@ -94,6 +122,7 @@ JointDLM식 `results.py`, 실험 비교 스크립트(`compare_experiments.py`), 
 
 ## 변경 이력
 - 2026-10-04: 최초 작성.
+- 2026-10-05: 사용법(새 프로젝트 체크리스트, 실행 명령, skills)을 이 문서에 추가 — 최상위 README가 프로젝트 README로 교체되기 때문.
 - 2026-10-05: `docs/implementation/`(코드 수정 이력) 추가. 캐시 위치를 `src/cache_env.py` 대신 `.env.example`로 이동.
 - 2026-10-04: 모델/loss/metric 규약을 `src/models|losses|metrics/README.md`로 옮기고 CLAUDE.md에서는 삭제(이후 섹션 번호가 한 칸씩 당겨짐: 문서화 §3, 실험 진행 §4, 보고 §5, 그려줘 §6, 파일 관리 §7, 프로젝트별 메모 §8).
 - 2026-10-04: 실행 산출물을 task-first(`logs/<task>/runs/<exp>`)에서 experiment-first(`logs/runs/<exp>/{train,eval,analyze,checkpoints}`)로 변경, `results/` 폴더 삭제, 그림 승격 규칙 추가.

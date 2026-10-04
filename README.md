@@ -1,5 +1,7 @@
 # research-template
 
+> 이 README는 프로젝트 README로 교체된다. 구조·규칙·사용법의 기준 문서는 [docs/adr/adr-template-structure.md](docs/adr/adr-template-structure.md).
+
 Lightning + Hydra 기반 연구 프로젝트 템플릿. [ashleve/lightning-hydra-template](https://github.com/ashleve/lightning-hydra-template)를
 fork해서, 실제 연구 프로젝트(Medical-CausalInference, JointDLM)에서 검증된 것들을 반영했다.
 **새 연구 프로젝트를 빠르게 세팅**하는 것이 목적이다. AI 어시스턴트 작업 규칙은 [CLAUDE.md](CLAUDE.md).

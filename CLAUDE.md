@@ -4,6 +4,10 @@
 함께 담는다. 코드를 "고치기" 전에, 그리고 뭔가 직접 실행하기 전에 읽을 것. **이 파일은 사용자가 관리하며 AI가
 임의로 수정하지 않는다** — 고칠 점이 보이면 제안만 한다 (§7).
 
+**먼저 볼 곳**: 폴더 구조와 규칙의 기준은 `docs/adr/adr-template-structure.md`(새 프로젝트 시작 체크리스트와 실행 명령도 거기),
+문서 지도는 `docs/README.md`. 세부는 폴더별 README(`src/{data,models,losses,metrics}`, `configs/experiment`, `data`, `third_party`, `scripts`)에 있다.
+(최상위 `README.md`는 프로젝트 README로 교체되므로 기준이 아니다.)
+
 ## 0. 요청이 불확실하거나 미정인 부분이 있을 때
 
 코딩 요청을 처리하다가 확실하지 않거나 아직 정해지지 않은 부분(예: 어떤 방식으로 구현할지, 어떤 파일/구조를
@@ -17,8 +21,8 @@
 
 한 번의 실행에 아래 4가지가 다 걸려있다. 하나라도 빠뜨리면 사고 난다:
 
-- **venv**: `.env`의 `VENV`(예: `/scratch2/<user>/venvs/<project>/bin/python`)를 쓸 것 — conda 아님, 셸의
-  `which python`은 무관한 환경일 수 있다. `train.py`/`eval.py`/`analyze.py` 밖에서는 `.env`가 자동 로드
+- **venv**: `.env`의 `VENV`, 없으면 `/scratch2/<user>/venvs/<PROJECT_NAME>`(`PROJECT_NAME`도 `.env`)의 `bin/python`을 쓸 것 —
+  conda 아님, 셸의 `which python`은 무관한 환경일 수 있다. `train.py`/`eval.py`/`analyze.py` 밖에서는 `.env`가 자동 로드
   안 되니 임시 스크립트는 `set -a; source .env; set +a` 먼저 할 것.
 - **GPU 필수**: 로그인/dev 셸엔 GPU 없음(`torch.cuda.is_available()` == False). login 서버 CPU로 절대
   우회하지 말 것 — 이 프로젝트 모델뿐 아니라 GPU 쓸 수 있는 모든 무거운 python 실행에 적용(TF 등도 동일).
@@ -34,7 +38,7 @@
 - **데이터 분할**: 새 스윕은 저장소에 고정된 공유 split 파일 기준으로 돌린다(예: `split/<dataset>/..._5fold_seed42.csv`).
   즉석 KFold/예전 split 데이터모듈로 새 실행을 시작하지 말 것(예전 로그 보존용). 어떤 split이 기준인지는
   이 파일 아래 "프로젝트별 메모"(§8)에 적는다.
-- **스윕 스크립트 컨벤션**: 같은 `configs/model/*.yaml` → 같은 `.sh` 하나만. 새 라운드로 넘어가면 그 스크립트의
+- **스윕 스크립트 컨벤션**: 같은 `configs/model/*.yaml` → 같은 `.sh` 하나만. 새 실험 주제로 넘어가면 그 스크립트의
   `CONFIG_DIR`/`EXPERIMENTS`를 덮어쓸 것 — 모드 토글/`case`문 추가 금지(git 히스토리가 예전 버전 보관).
   스윕 축은 CV **fold**(`FOLDS=(0 1 2 3 4)`), seed-replicate 아님 — `seed="${fold}" data.fold="${fold}"` 명시.
   **예외가 필요해 보여도 AI 혼자 판단해서** `_tmp_*.sh` **조용히 만들지 말 것 — 먼저 사용자에게 물어볼 것.**
@@ -55,14 +59,16 @@
 
 ```bash
 # (1) 스모크테스트 — GPU 할당 + debug=smoke + wandb 끔
+set -a; source .env; set +a                                    # PROJECT_NAME, VENV 등 (.env가 없으면 아래 PY를 직접 지정)
+PY="${VENV:-/scratch2/${USER}/venvs/${PROJECT_NAME}}/bin/python"
 source scripts/sbatch/profiles/gpu24.sh
 srun --partition="$SLURM_PARTITION" --qos="$SLURM_QOS" --gres="$SLURM_GRES" \
   --exclude="$SLURM_EXCLUDE" --time=00:15:00 \
-  "$VENV/bin/python" src/train.py \
+  "$PY" src/train.py \
   experiment/train=<model>/<YYMMDD_topic>/<YYMMDD-name> \
   debug=smoke trainer=gpu logger=csv seed=42 data.fold=0
 
-# (2) 실제 5-fold 스윕 — 캐노니컬 스크립트 하나, JOB_NAME/CONFIG_DIR/EXPERIMENTS만 새 라운드로 덮어써서 실행
+# (2) 실제 5-fold 스윕 — 캐노니컬 스크립트 하나, JOB_NAME/CONFIG_DIR/EXPERIMENTS만 새 주제로 덮어써서 실행
 ./scripts/<model>_train.sh
 ```
 
@@ -74,8 +80,8 @@ srun --partition="$SLURM_PARTITION" --qos="$SLURM_QOS" --gres="$SLURM_GRES" \
   나중에 기존 것과 거의 똑같아서 다시 합친 적 있음(기존 파일에 옵션만 추가하는 걸로 정리됨).
 - **학습 후 후속 조치(평가/분석)는 손으로 따로 sbatch 하지 말고, 스윕 스크립트의
   `run_analyze()`(`--dependency=afterok:<train_job>`으로 이미 자동 연결됨, `maybe_submit.sh`)에
-  라운드 종류를 분기해서 넣을 것.** 새 실험 축을 추가하면 그 라운드에 맞는 후속 조치를 `run_analyze()`
-  안에 조건 분기로 추가할 것 — 기존 analyze가 안 맞으면 그냥 두지 말고 라운드에 맞는 걸로 바꿀 것.
+  실험 주제에 따라 분기해서 넣을 것.** 새 실험 축을 추가하면 그 주제에 맞는 후속 조치를 `run_analyze()`
+  안에 조건 분기로 추가할 것 — 기존 analyze가 안 맞으면 그냥 두지 말고 그 주제에 맞는 걸로 바꿀 것.
 - **실험 검증 코드는 재사용 가능하면 `src/analysis/<YYMMDD_topic>/`, 일회성이면
   `src/studies/<YYMMDD_topic>/`에 둔다**(§4.4 "결과 기록" 단계에서 나오는 코드가 여기 해당).
 - **산출물 위치: 실험 하나 = 폴더 하나** — `logs/runs/<experiment_name>/`에 `train/`(hydra config, 로그, csv metrics),
