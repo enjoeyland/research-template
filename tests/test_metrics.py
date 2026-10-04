@@ -12,7 +12,8 @@ import torch
 from lightning import LightningModule, Trainer
 from torch.utils.data import DataLoader, Dataset
 
-from src.metrics import MetricGroup, MulticlassAccuracy, TaskMetrics
+from src.metrics import ClassificationMetricGroup, MetricGroup, MulticlassAccuracy, TaskMetrics
+from src.models.components.model_output import ModelOutput
 
 
 class _AccGroup(MetricGroup):
@@ -42,11 +43,8 @@ class _Module(LightningModule):
 
     def training_step(self, batch, batch_idx):
         pred, target = batch
-        self.log_dict(
-            self.metrics.on_step("train", None, batch, batch_idx, preds=pred, target=target),
-            on_step=False,
-            on_epoch=True,
-        )
+        outputs = ModelOutput(preds=pred, target=target)
+        self.log_dict(self.metrics.on_step("train", outputs, batch, batch_idx), on_step=False, on_epoch=True)
         return (self.dummy(pred.float().unsqueeze(-1)) * 0).sum()  # zero grad, just needs a graph
 
     def on_train_epoch_end(self) -> None:
@@ -81,8 +79,22 @@ def test_metric_on_step_returns_the_metric_object() -> None:
     """on_step must return `self` (not the computed value) -- that is what lets Lightning's own
     log()-based mechanism auto-compute/reset it at each epoch boundary."""
     metric = MulticlassAccuracy(num_classes=2)
-    result = metric.on_step("valid", None, None, 0, preds=torch.tensor([1, 0]), target=torch.tensor([1, 0]))
-    assert result is metric
+    outputs = ModelOutput(preds=torch.tensor([1, 0]), target=torch.tensor([1, 0]))
+    assert metric.on_step("valid", outputs, None, 0) is metric
+
+
+def test_metric_reads_configured_keys_and_skips_missing_stream() -> None:
+    """A second prediction stream is just other keys (no subclass); a stream absent at a step logs nothing."""
+    group = ClassificationMetricGroup(num_classes=2, preds_key="gt_preds", name_prefix="gt/")
+    assert "gt/acc" in group.metrics_valid
+    target = torch.tensor([1, 0])
+    # stream present (in extras) -> metric objects returned under the prefixed names
+    with_gt = ModelOutput(preds=torch.tensor([0, 0]), target=target, extras={"gt_preds": target})
+    logged = group.on_step("valid", with_gt, None, 0)
+    assert logged["val/gt/acc"] is group.metrics_valid["gt/acc"]
+    assert float(group.metrics_valid["gt/acc"].compute()) == 1.0  # read gt_preds, not preds
+    # stream absent -> nothing logged
+    assert group.on_step("test", ModelOutput(preds=target, target=target), None, 0) == {}
 
 
 class _FixedScore(TaskMetrics):

@@ -97,6 +97,26 @@ srun --partition="$SLURM_PARTITION" --qos="$SLURM_QOS" --gres="$SLURM_GRES" \
   `lightning.Trainer`로 검증할 것(`tests/test_metrics.py`). 이미 두 번(리셋 직접 추가 / 순수-Python
   테스트로 "확인") 잘못됨.
 
+### 3.1 모델 / loss / metric 인터페이스 (한 번 계산해서 둘 다 읽는다)
+
+- `forward`는 스텝당 `ModelOutput`(`src/models/components/model_output.py`: `logits`, `target`, `preds`, `extras`)
+  **하나**를 반환한다. loss와 metric이 **같은 객체**를 읽으므로 같은 값을 두 번 계산하지 않는다.
+  `training_step`은 `outputs = self.forward(batch)` → `loss_dict = self.loss_fn(outputs, batch)` →
+  `self.metrics.on_step(split, outputs, batch, ...)`.
+- **경계 규칙**: outputs에는 **모델만 만들 수 있는 값**(logits, forward 중 샘플한 마스크/노이즈, 중간 feature →
+  `extras`)만 담는다. softmax·logit adjustment·masked mean 같은 **결정적 전처리는 그것을 쓰는 loss/metric이 직접**
+  한다. 그래야 config에서 loss/metric을 바꿔 끼울 때 모델을 안 건드린다. 확률적이거나 비싼 값을 loss가 다시
+  계산하지 말 것(마스크를 두 번 뽑으면 서로 다른 마스크가 된다).
+- **loss** (`src/losses/`, `configs/losses/*.yaml`): 항 하나 = `LossTerm`(`requires`로 읽는 필드를 선언), 항들의
+  가중합 = `CompositeLoss` → `{"loss": 총합, "loss_<항>": 가중 전 값}`. 가중치와 항 구현(`_target_`)은 config에서
+  바꾼다(`model.loss.terms.ce.weight=0.5`). `requires`에 있는 필드를 모델이 안 내놓으면 명확한 KeyError가 난다.
+  loss로 뺄지 모델 안에 둘지: 항이 둘 이상이거나, 모델 간 재사용하거나, 자체 상태/하이퍼파라미터가 있으면 뺀다.
+  한 줄짜리 CE는 모델 안에 둬도 된다. 진단값(entropy floor 등)은 loss가 아니라 metric으로 로깅한다.
+- **metric** (`src/metrics/`): 읽을 필드는 `preds_key`/`target_key`로 config에서 정한다. 입력이 다른 두 번째 스트림
+  (예: `gt_preds`)은 서브클래스·`on_step` override가 아니라 **config에 group을 하나 더 선언**(`name_prefix`,
+  `preds_key`)한다. 한 metric 객체에는 한 스트림만 넣을 것(epoch 동안 상태를 쌓기 때문). 필드가 없는 스텝(예: eval에
+  없는 두 번째 pass)에서는 아무것도 로깅하지 않는다.
+
 ## 4. ADR (Architecture Decision Record) 작성
 
 `docs/adr/`에 프로젝트의 굵직한 아키텍처/방법론 결정을 기록한다. 규칙과 템플릿은 `docs/adr/README.md` 참고.

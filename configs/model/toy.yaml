@@ -1,6 +1,7 @@
 # Placeholder model. Replace with your own LightningModule.
 defaults:
   - /metrics@metrics: classification_task
+  - /losses@loss: ce
 
 _target_: src.models.toy_module.ToyModule
 

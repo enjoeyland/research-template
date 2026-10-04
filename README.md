@@ -10,7 +10,7 @@ fork해서, 실제 연구 프로젝트(Medical-CausalInference, JointDLM)에서 
 2. `cp .env.example .env` → `CHECKPOINT_DIR`, `VENV` 등 채우기.
 3. venv 만들고 `requirements.txt` 설치 (헤더 설명 참고, GPU 클러스터에서는 torch를 먼저 설치).
 4. 예제(toy)를 내 것으로 교체:
-   `src/data/toy_datamodule.py`, `src/models/toy_module.py`, `configs/{data,model}/toy.yaml`, `configs/metrics/classification_task.yaml`,
+   `src/data/toy_datamodule.py`, `src/models/toy_module.py`, `configs/{data,model}/toy.yaml`, `configs/{metrics,losses}/`,
    `configs/experiment/train/toy/`, `configs/hparams_search/toy_optuna.yaml`.
    모델 config에는 `metrics`(TaskMetrics, `monitor_metric`/`monitor_mode` 포함)를 유지한다 (체크포인트/early stopping이 읽는다; `val/<name>_best`, `val/overfit_gap`도 여기서 나온다).
 5. `CLAUDE.md` §9(프로젝트별 메모)와 `docs/CONTEXT.md`를 채운다. 외부 코드는 `third_party/`에 submodule로 추가한다.
@@ -24,7 +24,8 @@ fork해서, 실제 연구 프로젝트(Medical-CausalInference, JointDLM)에서 
 | `configs/experiment/train/` | 실험 1개 = yaml 1개, `<topic>/<YYMMDD_round>/<YYMMDD-name>.yaml` ([규칙](configs/experiment/README.md)) |
 | `configs/experiment/compare/` | 여러 실험을 묶어 비교하는 설정 (`configs/compare.yaml`용) |
 | `src/train.py`, `eval.py`, `analyze.py` | Hydra 엔트리포인트 |
-| `src/data/`, `src/models/` | LightningDataModule / LightningModule (toy 예제 포함) |
+| `src/data/`, `src/models/` | LightningDataModule / LightningModule (toy 예제 포함). `forward`는 `ModelOutput`을 반환 |
+| `src/losses/`, `src/metrics/` | loss 항(`CompositeLoss`)과 metric(`TaskMetrics`). 둘 다 `ModelOutput`을 읽고 config(`configs/losses`, `configs/metrics`)로 구성 (CLAUDE.md §3.1) |
 | `src/analysis/<YYMMDD_topic>/` | 재사용 가능한 사후 분석 코드 |
 | `src/studies/<YYMMDD_topic>/` | 일회성 검증/진단 코드 (로그는 `logs/studies/...`) |
 | `scripts/` | **shell 전용**. `scripts/sbatch/`는 SLURM 스윕 인프라 ([README](scripts/sbatch/README.md)) |

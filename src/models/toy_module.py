@@ -1,10 +1,14 @@
 """Small MLP classifier -- a placeholder showing the LightningModule conventions of this repo.
 
-Conventions worth keeping in your own modules:
-  * metrics live in a ``TaskMetrics`` (src/metrics, configured in ``configs/metrics/*.yaml`` and injected
-    through the model config); it also provides ``val/<name>_best`` and ``val/overfit_gap``,
-  * ``on_step`` returns metric OBJECTS -> log them with ``log_dict(..., on_epoch=True)`` (Lightning resets
-    them each epoch -- never call ``.reset()`` by hand, CLAUDE.md §3),
+Conventions worth keeping in your own modules (details: CLAUDE.md §3):
+  * ``forward`` returns ONE ``ModelOutput`` per step; the loss and the metrics both read it, so nothing is
+    computed twice. Put only what the model alone can produce into it (logits, sampled masks, features);
+    softmax-style preprocessing belongs to the loss / metric,
+  * the loss is a ``CompositeLoss`` of named terms (src/losses, configs/losses/*.yaml) injected through the model
+    config; it returns ``{"loss": total, "loss_<term>": ...}`` -- backprop ``loss``, log everything,
+  * metrics live in a ``TaskMetrics`` (src/metrics, configs/metrics/*.yaml) that also provides ``val/<name>_best``
+    and ``val/overfit_gap``; ``on_step`` returns metric OBJECTS -> ``log_dict(..., on_epoch=True)`` (Lightning
+    resets them each epoch -- never call ``.reset()`` by hand),
   * ``self.metrics.reset_best()`` once from ``on_train_start``,
   * the monitored metric (``model.metrics.monitor_metric``) must be one the module logs.
 """
@@ -14,7 +18,9 @@ from typing import Any, Dict, Tuple
 import torch
 from lightning import LightningModule
 
+from src.losses import CompositeLoss
 from src.metrics import TaskMetrics
+from src.models.components.model_output import ModelOutput
 
 Batch = Tuple[torch.Tensor, torch.Tensor]
 
@@ -26,39 +32,37 @@ class ToyModule(LightningModule):
         n_features: int,
         n_classes: int,
         metrics: TaskMetrics,
+        loss: CompositeLoss,
         hidden_size: int = 32,
     ) -> None:
         super().__init__()
-        # the metrics object is a module of its own, not a hyperparameter
-        self.save_hyperparameters(logger=False, ignore=["metrics"])
+        # metrics / loss are modules of their own, not hyperparameters
+        self.save_hyperparameters(logger=False, ignore=["metrics", "loss"])
         self.metrics = metrics
+        self.loss_fn = loss
 
         self.net = torch.nn.Sequential(
             torch.nn.Linear(n_features, hidden_size),
             torch.nn.ReLU(),
             torch.nn.Linear(hidden_size, n_classes),
         )
-        self.criterion = torch.nn.CrossEntropyLoss()
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.net(x)
-
-    def model_step(self, batch: Batch):
+    def forward(self, batch: Batch) -> ModelOutput:
         x, y = batch
-        logits = self.forward(x)
-        return self.criterion(logits, y), torch.argmax(logits, dim=1), y
+        return ModelOutput(logits=self.net(x), target=y)
 
     def on_train_start(self) -> None:
         # drops what the pre-training sanity-check validation pass wrote into the best-score tracker
         self.metrics.reset_best()
 
     def _step(self, split: str, batch: Batch, batch_idx: int) -> torch.Tensor:
-        loss, preds, target = self.model_step(batch)
+        outputs = self.forward(batch)
+        loss_dict = self.loss_fn(outputs, batch)
         key = "val" if split == "valid" else split
-        logged = {f"{key}/loss": loss}
-        logged.update(self.metrics.on_step(split, None, batch, batch_idx, preds=preds, target=target))
+        logged = {f"{key}/{name}": value for name, value in loss_dict.items()}
+        logged.update(self.metrics.on_step(split, outputs, batch, batch_idx))
         self.log_dict(logged, on_step=False, on_epoch=True, prog_bar=True)
-        return loss
+        return loss_dict["loss"]
 
     def _epoch_end(self, split: str) -> None:
         values = self.metrics.on_epoch_end(split)

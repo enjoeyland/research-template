@@ -1,0 +1,11 @@
+# Instantiated as CompositeLoss and injected into the LightningModule (`/losses@loss:` in a model config).
+# Add a term = add an entry; change its weight from an experiment yaml: `model.loss.terms.ce.weight=0.5`.
+# Swap a term's implementation by changing its `_target_` (e.g. a margin loss) -- the model is not touched.
+_target_: src.losses.CompositeLoss
+
+terms:
+  ce:
+    weight: 1.0
+    term:
+      _target_: src.losses.CrossEntropy
+      label_smoothing: 0.0
