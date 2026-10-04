@@ -219,3 +219,9 @@ MCCG 조사 결과: loss는 (a) `ConceptModelOutput` dataclass, (b) 580줄 forwa
 ### 6-9. pre-commit 전체 제거 (2026-10-04)
 
 MCCG는 포맷터만 껐을 뿐 나머지 훅은 켜 둔 채였지만 `.git/hooks/pre-commit`이 설치돼 있지 않아 실제로는 한 번도 돌지 않았고(JointDLM은 가져가지도 않음), 그래서 `.pre-commit-config.yaml`을 통째로 제거. 함께 제거: Makefile `format`, requirements/environment의 `pre-commit`, `.github/workflows/code-quality-*.yaml`(pre-commit을 돌리는 CI), PR 템플릿의 pre-commit 체크 항목, README 체크리스트의 `pre-commit install`. 코드 스타일은 수동 관리(CLAUDE.md의 "기존 코드 스타일을 따른다" 방침).
+
+### 6-10. 저장소 구분, 캐시 기본 위치, wandb project 이름 (2026-10-04)
+
+- 저장 위치 구분: `/lustre/<user>/` = 장기 보관(체크포인트 등), `/scratch2/<user>/` = 지워져도 되는 것(cache, tmp, venvs). CLAUDE.md §2와 `.env.example`에 기록.
+- 사전학습 모델/데이터셋 캐시 기본 위치: `src/cache_env.py`의 `set_cache_defaults()`가 `train/eval/analyze` 시작 직후(rootutils가 `.env`를 읽은 뒤, torch/transformers가 import되기 전) 설정되지 않은 변수만 `/scratch2/$USER/cache/...`로 채운다(`HF_HOME`, `TORCH_HOME`, `TORCH_EXTENSIONS_DIR`, `TRITON_CACHE_DIR`, `XDG_CACHE_HOME`, `WANDB_CACHE_DIR`, `WANDB_DATA_DIR`, `MPLCONFIGDIR`, `PIP_CACHE_DIR`). `CACHE_DIR`로 루트를 바꾸고 개별 변수는 `.env`가 우선. 참고: 기존 `/scratch2/khmin1104/cache`에는 이미 HF 허브 형식 캐시(`datasets--*` 등)가 루트에 평평하게 들어 있어, 새 기본값(`cache/huggingface/`)은 그것을 재사용하지 않는다.
+- wandb project 이름: 고정 문자열 대신 `WANDB_PROJECT`(.env) > repo 폴더 이름(`${basename:${paths.root_dir}}` resolver) > CLI `logger.wandb.project=`.

@@ -7,6 +7,10 @@ from lightning.pytorch.loggers import Logger
 from omegaconf import DictConfig
 
 rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
+
+from src.cache_env import set_cache_defaults  # noqa: E402
+
+set_cache_defaults()  # pretrained-weight / dataset caches -> /scratch2 (before torch/transformers read them)
 # ------------------------------------------------------------------------------------ #
 # the setup_root above is equivalent to:
 # - adding project root dir to PYTHONPATH

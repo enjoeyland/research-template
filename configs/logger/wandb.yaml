@@ -7,7 +7,9 @@ wandb:
   offline: False
   id: null # pass correct id to resume experiment!
   anonymous: null # enable anonymous logging
-  project: ${oc.env:WANDB_PROJECT,research-template} # set WANDB_PROJECT in .env (per research project)
+  # project name: WANDB_PROJECT (.env) > the repo folder name (so a copied template names itself) > override with
+  # `logger.wandb.project=<name>` on the command line
+  project: ${oc.env:WANDB_PROJECT,${basename:${paths.root_dir}}}
   log_model: False # upload lightning ckpts
   prefix: "" # a string to put at the beginning of metric keys
   entity: ${oc.env:WANDB_ENTITY,null} # your wandb team / user; set WANDB_ENTITY in .env

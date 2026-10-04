@@ -4,11 +4,14 @@ from importlib.util import find_spec
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional, Tuple
 
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
 
 from src.utils import pylogger, rich_utils
 
 log = pylogger.RankedLogger(__name__, rank_zero_only=True)
+
+# ${basename:<path>} in configs, e.g. the default wandb project = the repo folder name
+OmegaConf.register_new_resolver("basename", lambda path: Path(str(path)).name, replace=True)
 
 
 def link_checkpoints_dir(cfg: DictConfig) -> None:

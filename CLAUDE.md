@@ -85,6 +85,11 @@ srun --partition="$SLURM_PARTITION" --qos="$SLURM_QOS" --gres="$SLURM_GRES" \
 - 문서는 용도별로 나눈다: 제안/설계/예상은 `docs/proposals/`, 실행 기록/결과/해석은 `docs/experiments/`,
   결정 기록은 `docs/adr/`. 파일명은 `YYMMDD_주제.md`. **`proposals/`에는 실험 결과(실측 수치, 예상과의 비교)를
   쓰지 않고 `experiments/`에만 쓴다.**
+- **저장 위치 구분**: `/lustre/<user>/` = 장기 보관(체크포인트 `CHECKPOINT_DIR`, 남길 결과), `/scratch2/<user>/` = 지워져도 되는
+  것(cache, tmp, venvs). 사전학습 모델/다운로드 데이터셋 캐시(HF, torch hub, timm, wandb 등)는 `~/.cache`가 아니라
+  `/scratch2/<user>/cache`로 간다 — `src/cache_env.py`가 `train/eval/analyze` 시작 시 설정되지 않은 변수만 채운다
+  (`.env`/환경변수가 우선). 임시 스크립트에서 모델을 받을 때는 `from src.cache_env import set_cache_defaults`를 **torch/transformers
+  import 전에** 호출할 것.
 - **무거운 데이터셋은 `data/`에 심볼릭 링크**로 둔다(`ln -sfn <실제 위치> data/<dataset>`). `data/`는 gitignore(링크는
   커밋되지 않는다)이고, datamodule은 `${paths.data_dir}/<dataset>`를 `require_data_path()`로 열어 링크가 없거나 끊어졌으면
   해결 방법이 적힌 오류를 낸다. 데이터를 repo 안에 복사하지 말 것. 자세한 규칙은 `data/README.md`.

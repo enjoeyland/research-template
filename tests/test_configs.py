@@ -35,3 +35,26 @@ def test_eval_config(cfg_eval: DictConfig) -> None:
     hydra.utils.instantiate(cfg_eval.data)
     hydra.utils.instantiate(cfg_eval.model)
     hydra.utils.instantiate(cfg_eval.trainer)
+
+
+def test_wandb_project_defaults_to_repo_folder_and_env_overrides(monkeypatch) -> None:
+    """Default wandb project = the repo folder name (so a copied template names itself); WANDB_PROJECT wins."""
+    from pathlib import Path
+
+    import rootutils
+    from hydra import compose, initialize
+    from hydra.core.global_hydra import GlobalHydra
+
+    import src.utils  # noqa: F401  (registers the ${basename:...} resolver)
+
+    root = rootutils.find_root(indicator=".project-root")
+    monkeypatch.setenv("PROJECT_ROOT", str(root))
+    for env, expected in ((None, Path(root).name), ("my-project", "my-project")):
+        monkeypatch.delenv("WANDB_PROJECT", raising=False)
+        if env:
+            monkeypatch.setenv("WANDB_PROJECT", env)
+        GlobalHydra.instance().clear()
+        with initialize(version_base="1.3", config_path="../configs"):
+            cfg = compose(config_name="train.yaml", overrides=["logger=wandb"])
+            assert cfg.logger.wandb.project == expected
+    GlobalHydra.instance().clear()
