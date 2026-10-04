@@ -209,7 +209,7 @@ MNIST를 지우면 `tests/`의 train/eval/sweep smoke test와 `make train`이 �
 
 MCCG 조사 결과: loss는 (a) `ConceptModelOutput` dataclass, (b) 580줄 forward 안의 중첩 클로저(`_loss_cat` 등) + 문자열 플래그(`continuous_loss`, `repr_indep_loss_type`), (c) components의 제각각 시그니처 함수로 섞여 있었고, metric은 `outputs` 자리에 `None`을 넘기고 `preds=`/`target=` 고정 kwargs로 받아 입력이 다른 지표마다 group 서브클래스와 `on_step` override가 필요했다.
 
-결정: `src/losses/`(metrics와 대칭, config 그룹 `losses`) + `ModelOutput` dataclass(+`extras`). 경계 규칙은 "outputs = 모델만 만들 수 있는 값, 결정적 전처리 = loss/metric 소유, 필요한 필드는 `requires`/`preds_key`로 선언". 규약은 CLAUDE.md §3.1. 구현: `src/losses/`, `src/utils/model_output.py`, `configs/losses/ce.yaml`, metric의 `preds_key`/`target_key`/`name_prefix`, `tests/test_losses.py`. 아직 하지 않은 것: MCCG 쪽 이식(템플릿 스켈레톤만).
+결정: `src/losses/`(metrics와 대칭, config 그룹 `losses`) + `ModelOutput` dataclass(+`extras`). 경계 규칙은 "outputs = 모델만 만들 수 있는 값, 결정적 전처리 = loss/metric 소유, 필요한 필드는 `requires`/`preds_key`로 선언". 규약은 `src/models/README.md`, `src/losses/README.md`, `src/metrics/README.md`(요약: CLAUDE.md §3). 구현: `src/losses/`, `src/utils/model_output.py`, `configs/losses/ce.yaml`, metric의 `preds_key`/`target_key`/`name_prefix`, `tests/test_losses.py`. 아직 하지 않은 것: MCCG 쪽 이식(템플릿 스켈레톤만).
 
 ### 6-8. 제외하기로 한 것 (2026-10-04, 사용자 판단)
 
@@ -225,3 +225,9 @@ MCCG는 포맷터만 껐을 뿐 나머지 훅은 켜 둔 채였지만 `.git/hook
 - 저장 위치 구분: `/lustre/<user>/` = 장기 보관(체크포인트 등), `/scratch2/<user>/` = 지워져도 되는 것(cache, tmp, venvs). CLAUDE.md §2와 `.env.example`에 기록.
 - 사전학습 모델/데이터셋 캐시 기본 위치: `src/cache_env.py`의 `set_cache_defaults()`가 `train/eval/analyze` 시작 직후(rootutils가 `.env`를 읽은 뒤, torch/transformers가 import되기 전) 설정되지 않은 변수만 `/scratch2/$USER/cache/...`로 채운다(`HF_HOME`, `TORCH_HOME`, `TORCH_EXTENSIONS_DIR`, `TRITON_CACHE_DIR`, `XDG_CACHE_HOME`, `WANDB_CACHE_DIR`, `WANDB_DATA_DIR`, `MPLCONFIGDIR`, `PIP_CACHE_DIR`). `CACHE_DIR`로 루트를 바꾸고 개별 변수는 `.env`가 우선. 참고: 기존 `/scratch2/khmin1104/cache`에는 이미 HF 허브 형식 캐시(`datasets--*` 등)가 루트에 평평하게 들어 있어, 새 기본값(`cache/huggingface/`)은 그것을 재사용하지 않는다.
 - wandb project 이름: 고정 문자열 대신 `WANDB_PROJECT`(.env) > repo 폴더 이름(`${basename:${paths.root_dir}}` resolver) > CLI `logger.wandb.project=`.
+
+### 6-11. 산출물 구조: experiment-first, `results/` 삭제 (2026-10-04)
+
+문제: `results/`는 "정리된 결과물, 커밋 대상"이라고만 정의돼 있고 실제 산출물은 전부 `logs/`에 생겨 역할이 애매했다. 또 task-first 구조(`logs/train/runs/<exp>`, `logs/analyze/runs/<exp>`)라 같은 실험의 학습과 분석 결과가 다른 폴더로 갈라져, 로그·체크포인트·결과를 한곳에서 볼 수 없었다.
+
+결정: `logs/runs/<experiment_name>/{train,eval,analyze,checkpoints}`(`paths.exp_dir`). `hydra.run.dir=${paths.exp_dir}/${task_name}`, `ckpt_dir`은 task와 무관(`${CHECKPOINT_DIR|log_dir}/runs/<exp>/checkpoints`)이라 `analyze.yaml`의 ckpt 경로 override가 필요 없어졌고, `link_checkpoints_dir`은 `<exp_dir>/checkpoints`에 symlink를 둔다. `debug=smoke`는 `paths.log_dir=logs/smoke`로 같은 트리를 격리(ckpt는 `CHECKPOINT_DIR`로 새지 않음). `results/` 삭제. 그림은 한 실험이면 `logs/runs/<exp>/analyze/`, 일회성/여러 실험이면 `logs/studies/<YYMMDD_topic>/`, 문서에 실을 것만 `docs/figures/`로 복사(승격). `logs/` 이름은 유지(`runs/`·`outputs/`로의 개명은 slurm/studies/smoke 경로까지 바꾸게 되어 보류).

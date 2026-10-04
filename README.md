@@ -24,17 +24,18 @@ fork해서, 실제 연구 프로젝트(Medical-CausalInference, JointDLM)에서 
 | `configs/experiment/train/` | 실험 1개 = yaml 1개, `<model>/<YYMMDD_topic>/<YYMMDD-name>.yaml` ([규칙](configs/experiment/README.md)) |
 | `src/train.py`, `eval.py`, `analyze.py` | Hydra 엔트리포인트 |
 | `src/data/`, `src/models/` | LightningDataModule / LightningModule (toy 예제 포함). `forward`는 `ModelOutput`을 반환 |
-| `src/losses/`, `src/metrics/` | loss 항(`CompositeLoss`)과 metric(`TaskMetrics`). 둘 다 `ModelOutput`을 읽고 config(`configs/losses`, `configs/metrics`)로 구성 (CLAUDE.md §3.1) |
+| `src/losses/`, `src/metrics/` | loss 항(`CompositeLoss`)과 metric(`TaskMetrics`). 둘 다 `ModelOutput`을 읽고 config(`configs/losses`, `configs/metrics`)로 구성 (각 폴더 README: `src/models/`, `src/losses/`, `src/metrics/`, 요약은 CLAUDE.md §3) |
 | `src/analysis/<YYMMDD_topic>/` | 재사용 가능한 사후 분석 코드 |
 | `src/studies/<YYMMDD_topic>/` | 일회성 검증/진단 코드 (로그는 `logs/studies/...`) |
 | `scripts/` | **shell 전용**. `scripts/sbatch/`는 SLURM 스윕 인프라 ([README](scripts/sbatch/README.md)) |
 | `third_party/` | 외부 코드(git submodule) 전용 ([README](third_party/README.md)) |
-| `results/` | 정리된 결과물(표 등). 원본 로그는 `logs/`(gitignore) |
+| `logs/` | 실행 산출물(gitignore). `logs/runs/<experiment>/`에 train·eval·analyze·checkpoints가 한곳에, `slurm/`·`smoke/`·`studies/`는 따로 |
 | `docs/` | `proposals/` 설계, `experiments/` 결과, `adr/` 결정, `figures/` ([색인](docs/README.md)) |
 | `data/` | 무거운 데이터셋의 **심볼릭 링크**만 둔다 (gitignore, [규칙](data/README.md)) |
 | `tests/` | pytest (설정 조합, 학습/평가 smoke test) |
 
-체크포인트는 `logs/train/runs/<experiment_name>/checkpoints/seed<N>_epoch_XXX.ckpt` (`.env`의 `CHECKPOINT_DIR`이 있으면
+실험 하나 = 폴더 하나: `logs/runs/<experiment_name>/{train,eval,analyze,checkpoints}/`. 체크포인트는
+`checkpoints/seed<N>_epoch_XXX.ckpt` (`.env`의 `CHECKPOINT_DIR`이 있으면
 그쪽). 한 실험 = 폴더 하나, seed는 파일명에 들어간다.
 
 ## 실행

@@ -35,17 +35,21 @@ research-template/
 ├── scripts/               shell 전용. sbatch/ = SLURM 스윕 인프라 (common/, profiles/, template.sh)
 ├── data/                  무거운 데이터셋의 심볼릭 링크만 (gitignore, README와 .gitkeep만 추적)
 ├── third_party/           외부 코드(git submodule) 전용. repo마다 자기 venv
-├── results/               정리된 결과물(표 등). 원본 로그는 logs/ (gitignore)
 ├── docs/                  proposals/ experiments/ adr/ figures/ papers/(PDF, gitignore) + CONTEXT.md, README.md
-├── logs/                  실행 산출물 (gitignore): train/runs/, analyze/runs/, slurm/, smoke/, studies/
+├── logs/                  실행 산출물 (gitignore). runs/<experiment>/{train,eval,analyze,checkpoints}가 한곳에,
+│                          slurm/ smoke/ studies/ 는 따로. results/ 폴더는 없다
 └── tests/                 pytest (설정 조합, 학습/평가/재개, metrics, losses, trends, utils)
 ```
 
 ### 2. 규칙
 
 **실행과 산출물**
-- 한 실험 = 폴더 하나: `logs/train/runs/<experiment_name>/checkpoints/seed<N>_epoch_XXX.ckpt`. seed는 폴더가 아니라 파일명에 들어간다.
-  `experiment_name`은 실험 config 파일 이름(확장자 제외)과 같게 둔다. `CHECKPOINT_DIR`이 있으면 체크포인트는 그쪽에 쌓이고 `logs/`에 링크가 생긴다.
+- **한 실험 = 폴더 하나(experiment-first)**: `logs/runs/<experiment_name>/` 아래에 `train/`(hydra config, 로그, csv metrics), `eval/`, `analyze/`(csv·png),
+  `checkpoints/seed<N>_epoch_XXX.ckpt`가 모인다. seed는 폴더가 아니라 파일명에 들어간다. `experiment_name`은 실험 config 파일 이름(확장자 제외)과 같게 둔다.
+  `CHECKPOINT_DIR`(lustre)가 있으면 체크포인트는 `$CHECKPOINT_DIR/runs/<experiment_name>/checkpoints`에 쌓이고 `logs/runs/<exp>/checkpoints`가 그쪽을 가리키는
+  symlink가 되어, 한 폴더에서 로그·체크포인트·결과가 다 보인다. `debug=smoke`는 `logs/smoke/`로 같은 트리를 격리한다.
+- **그림/표**: 한 실험의 분석 결과는 `logs/runs/<exp>/analyze/`, 여러 실험에 걸치거나 일회성인 것은 `logs/studies/<YYMMDD_topic>/`(코드는 `src/studies/`).
+  문서에 실을 것만 `docs/figures/`로 복사(승격)한다. `logs/`는 gitignore이므로 문서가 `logs/`를 직접 링크하지 않는다.
 - 실험 config 경로는 `experiment/train/<model>/<YYMMDD_topic>/<YYMMDD-name>.yaml`. `<model>`은 같은 `configs/model/*.yaml`을 쓰는 계열이고, 스윕
   스크립트 하나(`scripts/<model>_train.sh`)가 한 `<model>`을 담당한다.
 - `scripts/`는 shell 전용(sbatch 스윕 실행기). 분석은 `src/analysis/`, 일회성은 `src/studies/`, 로그는 `logs/studies/`. 새로 만들기 전에 기존 파일부터 확인한다.
@@ -53,7 +57,7 @@ research-template/
   `callbacks=default_resumable`의 `seed<N>_resume.ckpt`와 저장된 wandb id로 이어서 돈다.
 - 스모크 테스트는 `debug=smoke logger=csv` (결과는 `logs/smoke/`로 격리), wandb는 실제 실험에서만.
 
-**모델 / loss / metric 인터페이스** (CLAUDE.md §3.1)
+**모델 / loss / metric 인터페이스** (각 폴더 README: `src/models/`, `src/losses/`, `src/metrics/`, 요약은 CLAUDE.md §3)
 - `forward`는 스텝당 `ModelOutput`(`logits`, `target`, `preds`, `extras`)을 한 번만 만든다. loss와 metric이 같은 객체를 읽는다.
 - outputs에는 모델만 만들 수 있는 값(logits, forward 중 샘플한 마스크, 중간 feature)만 담고, 결정적 전처리는 loss/metric이 소유한다. 그래야 config에서
   loss/metric을 바꿔 끼워도 모델을 건드리지 않는다.
@@ -88,3 +92,5 @@ JointDLM식 `results.py`, 실험 비교 스크립트(`compare_experiments.py`), 
 
 ## 변경 이력
 - 2026-10-04: 최초 작성.
+- 2026-10-04: 모델/loss/metric 규약의 상세를 `src/models|losses|metrics/README.md`로 옮기고 CLAUDE.md §3에는 핵심만 남김.
+- 2026-10-04: 실행 산출물을 task-first(`logs/<task>/runs/<exp>`)에서 experiment-first(`logs/runs/<exp>/{train,eval,analyze,checkpoints}`)로 변경, `results/` 폴더 삭제, 그림 승격 규칙 추가.

@@ -26,7 +26,7 @@
   GPU 쓰는지 확신하지 말 것 — `torch.cuda.is_available()`/`list_physical_devices`류로 확인.
   GPU가 필요 없는 일반 스크립트(데이터 생성, 분석 등)는 `cpu.sh` 프로필로 제출한다.
 - **스모크테스트 = `debug=smoke logger=csv`** (`configs/debug/smoke.yaml`): 1 epoch, train 20 / val·test 5 batch만
-  돌고, early stopping을 끄고, 체크포인트·결과를 `logs/smoke/`로 격리해서 실제 실험 폴더(`logs/train/runs/`)를
+  돌고, early stopping을 끄고, 체크포인트·결과를 `logs/smoke/`로 격리해서 실제 실험 폴더(`logs/runs/`)를
   오염시키지 않는다. 체크포인트 저장→로드→test 경로까지 실제로 지나간다. 더 가벼운 확인(1 batch, 체크포인트 저장
   안 함)이 필요하면 `+trainer.fast_dev_run=true`. 둘 다 GPU 할당에서(`trainer=gpu`) 돌릴 것.
 - **wandb**: 스모크테스트/디버깅/버그재현이면 `logger=csv`. 사용자가 명시적으로 실제 실험을
@@ -78,6 +78,12 @@ srun --partition="$SLURM_PARTITION" --qos="$SLURM_QOS" --gres="$SLURM_GRES" \
   안에 조건 분기로 추가할 것 — 기존 analyze가 안 맞으면 그냥 두지 말고 라운드에 맞는 걸로 바꿀 것.
 - **실험 검증 코드는 재사용 가능하면 `src/analysis/<YYMMDD_topic>/`, 일회성이면
   `src/studies/<YYMMDD_topic>/`에 둔다**(§5.4 "결과 기록" 단계에서 나오는 코드가 여기 해당).
+- **산출물 위치: 실험 하나 = 폴더 하나** — `logs/runs/<experiment_name>/`에 `train/`(hydra config, 로그, csv metrics),
+  `eval/`, `analyze/`(csv·png), `checkpoints/`(`CHECKPOINT_DIR`이 있으면 lustre로 가는 symlink)가 모두 모인다.
+  `ls logs/runs/<exp>` 한 번으로 로그·체크포인트·결과가 다 보여야 한다. `logs/`는 gitignore이고 `results/` 폴더는 없다.
+- **그림/표를 만들 때**: 한 실험의 분석 결과 → `logs/runs/<exp>/analyze/`. 여러 실험에 걸치거나 일회성으로 그려 보는 것 →
+  `logs/studies/<YYMMDD_topic>/`(코드는 `src/studies/<YYMMDD_topic>/`). **문서에 실을 것만** `docs/figures/`로 **복사(승격)**하고
+  문서에는 그 복사본을 링크한다 — `logs/`는 커밋되지 않으므로 문서가 `logs/`를 직접 링크하면 깨진다.
 - **스모크테스트/실행 로그 원본(`*.log`)은 `src/studies/<YYMMDD_topic>/`에 같이 두지 말고
   `logs/studies/<YYMMDD_topic>/`에 저장할 것** — `logs/`는 `.gitignore` 대상이라 소스 코드와 같은 디렉토리에
   두면 로그만 영구 미추적 상태로 섞여 있게 된다. `src/studies/` 쪽 README/스크립트 주석에서 로그를 언급할 때는
@@ -95,40 +101,19 @@ srun --partition="$SLURM_PARTITION" --qos="$SLURM_QOS" --gres="$SLURM_GRES" \
   해결 방법이 적힌 오류를 낸다. 데이터를 repo 안에 복사하지 말 것. 자세한 규칙은 `data/README.md`.
 - 외부 코드는 `third_party/`의 git submodule로 둔다. 원본을 직접 수정하지 말 것.
 
-## 3. `src/metrics/*`: 수동 `.reset()` 호출 금지
+## 3. 모델 / loss / metric 규약 (상세는 각 폴더 README)
 
-- `TaskMetrics`는 메트릭 *객체 자체*를 `self.log_dict(..., on_epoch=True)`로 로깅 → Lightning이
-  epoch마다 자동으로 리셋(sanity-check도 자동 격리). 수동 리셋을 추가하면 이중 리셋 경고만 날 뿐.
-- `on_step`이 `self` 대신 계산된 값을 반환하도록 "단순화"하면 자동 리셋 경로가 깨져서 매 epoch 값이
-  누적 평균이 되어버림(검증됨: epoch0 전부정답+epoch1 전부오답 → 0.0 아니라 0.5로 보고).
-- 순수 Python(`Trainer` 없이) 직접 호출은 원래 리셋 안 됨 — 이걸로 "버그"라 오판하지 말 것, 실제
-  `lightning.Trainer`로 검증할 것(`tests/test_metrics.py`). 이미 두 번(리셋 직접 추가 / 순수-Python
-  테스트로 "확인") 잘못됨.
+코드 옆 README가 기준이다: [`src/models/README.md`](src/models/README.md), [`src/losses/README.md`](src/losses/README.md),
+[`src/metrics/README.md`](src/metrics/README.md). 매번 지킬 핵심만 여기 적는다.
 
-### 3.1 모델 / loss / metric 인터페이스 (한 번 계산해서 둘 다 읽는다)
-
-- `forward`는 스텝당 `ModelOutput`(`src/utils/model_output.py`: `logits`, `target`, `preds`, `extras`)
-  **하나**를 반환한다. loss와 metric이 **같은 객체**를 읽으므로 같은 값을 두 번 계산하지 않는다.
-  `training_step`은 `outputs = self.forward(batch)` → `loss_dict = self.loss_fn(outputs, batch)` →
-  `self.metrics.on_step(split, outputs, batch, ...)`.
-- **경계 규칙**: outputs에는 **모델만 만들 수 있는 값**(logits, forward 중 샘플한 마스크/노이즈, 중간 feature →
-  `extras`)만 담는다. softmax·logit adjustment·masked mean 같은 **결정적 전처리는 그것을 쓰는 loss/metric이 직접**
-  한다. 그래야 config에서 loss/metric을 바꿔 끼울 때 모델을 안 건드린다. 확률적이거나 비싼 값을 loss가 다시
-  계산하지 말 것(마스크를 두 번 뽑으면 서로 다른 마스크가 된다).
-- **loss** (`src/losses/`, `configs/losses/*.yaml`): 항 하나 = `LossTerm`(`requires`로 읽는 필드를 선언), 항들의
-  가중합 = `CompositeLoss` → `{"loss": 총합, "loss_<항>": 가중 전 값}`. 가중치와 항 구현(`_target_`)은 config에서
-  바꾼다(`model.loss.terms.ce.weight=0.5`). `requires`에 있는 필드를 모델이 안 내놓으면 명확한 KeyError가 난다.
-  loss로 뺄지 모델 안에 둘지: 항이 둘 이상이거나, 모델 간 재사용하거나, 자체 상태/하이퍼파라미터가 있으면 뺀다.
-  한 줄짜리 CE는 모델 안에 둬도 된다. 진단값(entropy floor 등)은 loss가 아니라 metric으로 로깅한다.
-- **`val/<name>_best`, `val/overfit_gap` 곡선**(wandb에서 그래프로 보려는 용도)은 모델·metric 코드가 아니라
-  `MetricTrends` 콜백(`src/utils/callbacks.py`, `configs/callbacks/metric_trends.yaml`)이 이미 로깅된 `train/*`·`val/*`에서
-  만든다. `on_train_epoch_end`에서 계산하므로 train(N)과 val(N)이 같은 epoch끼리 짝지어지고(validation 훅에서 읽으면
-  train(N-1)과 짝지어진다), sanity-check 값이 best에 섞이지 않으며, best가 체크포인트에 들어가 resume 후에도 곡선이
-  이어진다. 양수 = 과적합(max 지표는 train-val, min 지표는 val-train). wandb에는 `define_metric(summary=...)`도 건다.
-- **metric** (`src/metrics/`): 읽을 필드는 `preds_key`/`target_key`로 config에서 정한다. 입력이 다른 두 번째 스트림
-  (예: `gt_preds`)은 서브클래스·`on_step` override가 아니라 **config에 group을 하나 더 선언**(`name_prefix`,
-  `preds_key`)한다. 한 metric 객체에는 한 스트림만 넣을 것(epoch 동안 상태를 쌓기 때문). 필드가 없는 스텝(예: eval에
-  없는 두 번째 pass)에서는 아무것도 로깅하지 않는다.
+- **metric 수동 `.reset()` 금지.** `on_step`은 계산된 값이 아니라 메트릭 객체(`return self`)를 반환하고, 모델은 `log_dict(..., on_epoch=True)`로 로깅한다
+  (Lightning이 epoch마다 자동 리셋). "단순화"한다고 값을 반환하게 바꾸면 매 epoch 값이 누적 평균이 된다. `Trainer` 없이 순수 Python으로 호출해 "버그"라
+  오판하지 말고 실제 `Trainer`로 검증할 것. 이미 두 번 틀렸다 → `src/metrics/README.md`.
+- **`forward`는 스텝당 `ModelOutput` 하나**(`src/utils/model_output.py`)를 반환하고, loss와 metric이 같은 객체를 읽는다. outputs에는 모델만 만들 수 있는 값
+  (logits, 샘플한 마스크, 중간 feature)만 담고, softmax 같은 **결정적 전처리는 loss/metric이 직접** 한다. 확률적이거나 비싼 값을 loss가 다시 계산하지
+  말 것 → `src/models/README.md`, `src/losses/README.md`.
+- **loss 가중치·구현은 config**(`configs/losses/`, `model.loss.terms.<항>.weight`)로 바꾼다. 진단값은 loss가 아니라 `FieldMeanGroup` metric으로 로깅한다.
+- **`val/<name>_best`, `val/overfit_gap`은 `MetricTrends` 콜백**(`src/utils/callbacks.py`)이 만든다. 모델/metric에 만들지 말 것.
 
 ## 4. ADR (Architecture Decision Record) 작성
 
@@ -179,6 +164,9 @@ srun --partition="$SLURM_PARTITION" --qos="$SLURM_QOS" --gres="$SLURM_GRES" \
   옛 체크포인트를 분석할 땐 그 시점 값을 명시적으로 넘길 것.
 - **checkpoint 재개/평가** — torch>=2.6은 `torch.load` 기본값이 `weights_only=True`라 hparams에 든
   `omegaconf.ListConfig` 등을 못 읽는다. 우리 자신의 체크포인트는 `weights_only=False`로 읽는다.
+- **`ModelCheckpoint`를 여러 개 쓸 때 `state_key` 충돌** — Lightning은 (monitor, mode, every_n_*)이 같은 두 체크포인트를 거부한다
+  (`Found more than one stateful callback of type ModelCheckpoint`). resume용은 `ResumeModelCheckpoint`(고정 키)를 쓴다 —
+  `max_epochs`가 resume 간격(10)과 같을 때만 터져서 늦게 발견됐다. 새 체크포인트 콜백을 추가하면 `max_epochs` 값을 바꿔 가며 Trainer를 만들어 볼 것.
 - **`ModelCheckpoint`의 `save_last`** — 모니터 지표가 천장에 닿아 더 이상 개선되지 않으면 "last"도
   같이 멈춘다. 마지막 epoch 체크포인트가 필요하면 `configs/callbacks/model_checkpoint_last.yaml`을 쓴다.
 
