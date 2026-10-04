@@ -4,6 +4,8 @@
 - 폴더:
   - `proposals/` — 제안, 설계, 예상, 문헌/코드 대조. **실험 결과(실측 수치, 예상과의 비교, 해석)는 쓰지 않는다.**
   - `experiments/` — 실행 기록, 결과, 해석. 판정 기준은 결과를 보기 전에 `proposals/`에 먼저 쓴다(CLAUDE.md §4).
+  - `implementation/` — **코드 수정의 이야기**: 증상 → 원인(기각한 가설 포함) → 근거 → 수정 → 검증. 조사가 필요했던 버그나 설계에 영향을 주는
+    변경만 쓴다(한 줄짜리는 커밋 메시지). 코드 주석에는 불변 조건/함정만 1~3줄 쓰고 길면 이 문서를 가리킨다.
   - `adr/` — 굵직한 결정 기록 ([규칙](adr/README.md)).
   - `papers/` — 참고 논문 PDF (로컬 보관, git에는 올리지 않음. 파일명 `<저자연도>_<제목요약>.pdf`).
   - `figures/` — 문서에 실린 그림(**승격된 복사본**). 시도해 본 그림은 `logs/studies/<YYMMDD_topic>/`에 두고, 문서에 실을 것만
@@ -20,6 +22,14 @@
 
 | 문서 | 내용 |
 |---|---|
+
+### implementation/
+
+| 문서 | 내용 |
+|---|---|
+| [261004_resume-checkpoint-state-key-collision.md](implementation/261004_resume-checkpoint-state-key-collision.md) | `default_resumable`이 `max_epochs=10`에서 시작하지 못하던 `state_key` 충돌 |
+| [261004_metric-trends-epoch-pairing.md](implementation/261004_metric-trends-epoch-pairing.md) | `val/overfit_gap`이 한 epoch 밀려 있던 문제, best/gap을 `MetricTrends` 콜백으로 이동 |
+| [261004_sbatch-template-runtime-fixes.md](implementation/261004_sbatch-template-runtime-fixes.md) | sbatch 안에서 도는지 검증하며 찾은 4건(.env 없음, spool 경로, 그룹 override, analyze 폴더) |
 
 ### experiments/
 

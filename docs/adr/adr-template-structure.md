@@ -35,7 +35,7 @@ research-template/
 ├── scripts/               shell 전용. sbatch/ = SLURM 스윕 인프라 (common/, profiles/, template.sh)
 ├── data/                  무거운 데이터셋의 심볼릭 링크만 (gitignore, README와 .gitkeep만 추적)
 ├── third_party/           외부 코드(git submodule) 전용. repo마다 자기 venv
-├── docs/                  proposals/ experiments/ adr/ figures/ papers/(PDF, gitignore) + CONTEXT.md, README.md
+├── docs/                  proposals/ experiments/ implementation/ adr/ figures/ papers/(PDF, gitignore) + CONTEXT.md, README.md
 ├── logs/                  실행 산출물 (gitignore). runs/<experiment>/{train,eval,analyze,checkpoints}가 한곳에,
 │                          slurm/ smoke/ studies/ 는 따로. results/ 폴더는 없다
 └── tests/                 pytest (설정 조합, 학습/평가/재개, metrics, losses, trends, utils)
@@ -74,6 +74,8 @@ research-template/
 
 **문서**
 - `proposals/`(설계, 예상, 판정 기준)와 `experiments/`(실행 기록, 결과, 해석)를 분리한다. 실험 결과는 `proposals/`에 쓰지 않는다.
+- `implementation/`은 코드 수정의 이야기(증상, 원인과 기각한 가설, 근거, 수정, 검증)를 주제별 파일로 남긴다. 코드 주석에는 불변 조건/함정만 1~3줄 쓰고 길면 이 문서를 가리킨다.
+  한 줄 요약은 git 커밋 메시지, 성능 숫자와 해석은 `experiments/`.
 - 파일명 `YYMMDD_주제.md`. 굵직한 결정은 `adr/`에 (이 문서처럼 템플릿 기준 문서는 날짜 없이).
 
 **검증 도구**
@@ -92,5 +94,6 @@ JointDLM식 `results.py`, 실험 비교 스크립트(`compare_experiments.py`), 
 
 ## 변경 이력
 - 2026-10-04: 최초 작성.
+- 2026-10-05: `docs/implementation/`(코드 수정 이력) 추가.
 - 2026-10-04: 모델/loss/metric 규약을 `src/models|losses|metrics/README.md`로 옮기고 CLAUDE.md에서는 삭제(이후 섹션 번호가 한 칸씩 당겨짐: ADR §3, 실험 진행 §4, 보고 §5, 그려줘 §6, 파일 관리 §7, 프로젝트별 메모 §8).
 - 2026-10-04: 실행 산출물을 task-first(`logs/<task>/runs/<exp>`)에서 experiment-first(`logs/runs/<exp>/{train,eval,analyze,checkpoints}`)로 변경, `results/` 폴더 삭제, 그림 승격 규칙 추가.
