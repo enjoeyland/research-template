@@ -70,7 +70,9 @@ research-template/
 - 사전학습 모델/데이터셋 캐시는 `~/.cache`가 아니라 `/scratch2/$USER/cache`로 간다. 코드가 아니라 `.env.example`의 `HUGGINGFACE_HUB_CACHE`와 `TMPDIR`로 정하고(`${USER}` 확장),
   `train/eval/analyze`가 `.env`를 먼저 읽으므로 라이브러리 import 전에 적용된다.
 - 무거운 데이터셋은 repo 안에 복사하지 않고 `data/<dataset>` 심볼릭 링크. datamodule은 `${paths.data_dir}/<dataset>`를 `require_data_path()`로 연다.
-- 외부 코드는 `third_party/`의 git submodule이고, 원본은 직접 수정하지 않는다. 각 repo는 자기 venv(`/scratch2/$USER/venvs/<repo>`)를 만든다.
+- 외부 코드는 `third_party/`의 git submodule이고, 원본은 직접 수정하지 않는다. 우리가 쓰는 어댑터, 실행 스크립트, 결과 수집은 submodule 안이 아니라 우리 repo에 둔다.
+  third_party를 돌린 것도 `logs/runs/<exp>/`의 한 실험이다(별도 폴더 없음). 가져오는 방식은 세 가지(우리 구조에 맞춘 어댑터 / loss와 평가가 얽힌 경우의 어댑터 패턴 /
+  독립 실행)이고, 독립 실행은 `#SBATCH` 헤더를 직접 쓰지 않고 `scripts/sbatch/template.sh`를 복사해 repo 전용 venv로 돈다(`third_party/README.md`).
 
 **문서**
 - `proposals/`(설계, 예상, 판정 기준)와 `experiments/`(실행 기록, 결과, 해석)를 분리한다. 실험 결과는 `proposals/`에 쓰지 않는다.
@@ -124,6 +126,7 @@ JointDLM식 `results.py`, 실험 비교 스크립트(`compare_experiments.py`), 
 
 ## 변경 이력
 - 2026-10-04: 최초 작성.
+- 2026-10-05: third_party 사용 방식(세 가지, 한 실험 폴더, 독립 실행 규칙)과 모델 "패턴 2: 어댑터"를 README에 추가.
 - 2026-10-05: 사용법(새 프로젝트 체크리스트, 실행 명령, skills)을 이 문서에 추가 — 최상위 README가 프로젝트 README로 교체되기 때문.
 - 2026-10-05: GitHub Actions를 최소 CPU 테스트 workflow 하나로 축소.
 - 2026-10-05: `docs/implementation/`(코드 수정 이력) 추가. 캐시 위치를 `src/cache_env.py` 대신 `.env.example`로 이동.

@@ -37,3 +37,26 @@ return loss_dict["loss"]
 
 - `metrics`(TaskMetrics, `monitor_metric`/`monitor_mode` 포함)와 `loss`(CompositeLoss)를 `defaults`로 불러온다: `/metrics@metrics:`, `/losses@loss:`.
   콜백(체크포인트, early stopping)이 `${model.metrics.monitor_metric}`을 읽으므로 모델이 그 지표를 실제로 로깅해야 한다.
+
+## 패턴 2: 어댑터 (third_party나 생성 모델처럼 loss와 평가가 모델에 얽힌 경우)
+
+위의 `ModelOutput` → `CompositeLoss` / `TaskMetrics` 구조는 "배치를 넣으면 출력이 나오고, loss와 metric이 그 출력을 읽는" 모델을 가정한다. 그런데 확산 모델처럼
+**loss가 모델 내부 샘플링(노이즈, 시간 t 등)과 한꺼번에 계산**되고, **평가가 모델로 직접 생성(샘플링)한 뒤 계산하는 것**이면 이 구조에 억지로 맞추지 않는다.
+이럴 때는 어댑터 하나가 두 가지만 제공한다(JointDLM의 `src/models/jointdlm_module.py`가 이 방식):
+
+```python
+class Adapter:
+    def build_net(self): ...                        # third_party / 연구 코드의 모델을 만든다
+    def loss(self, net, batch):                     # -> (loss, {name: value})  내부 샘플링까지 포함해 loss를 계산
+        ...
+    def evaluate(self, net, cfg):                   # -> dict  샘플링 기반 평가(유효율, 일치율 ...)
+        ...
+```
+
+- **LightningModule 하나**가 adapter를 골라 `training_step`에서 `loss, parts = adapter.loss(net, batch)` → `self.log_dict({f"train/{k}": v ...})` → `return loss`를 한다.
+  `val/*`, `train/*`를 로깅하면 `MetricTrends`(best, overfit_gap 곡선)는 그대로 쓸 수 있다.
+- **`evaluate`는 배치 단위 metric이 아니다.** `eval`/`analyze` 단계에서 호출하고 결과 dict를 `logs/runs/<exp>/eval/`(또는 `analyze/`)에 저장한다. `TaskMetrics`에 넣지 않는다.
+- 어댑터가 loss를 안에서 계산해서 넘기더라도 `CompositeLoss`로 로깅 형식을 맞추고 싶으면 `ModelOutput.extras`에 값을 담고 `FieldTerm(key)`로 항에 통과시킨다
+  (항별 곡선이 `loss_<항>`으로 같은 이름 규칙으로 나온다).
+- third_party는 어댑터 안에서 import한다(`sys.path.insert(0, "third_party/<repo>")`, 무거운 import는 그 모델을 쓸 때만). 원본은 고치지 않고 필요한 변경은 어댑터에서 감싼다.
+  의존성이 우리 venv와 맞지 않으면 어댑터가 아니라 독립 실행으로 간다([third_party/README.md](../../third_party/README.md)).
