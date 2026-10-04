@@ -1,11 +1,10 @@
 # configs/experiment/
 
-실험 1개 = yaml 1개. 두 그룹이 있고 각각 Hydra config group이다.
+실험 1개 = yaml 1개. `train/`이 Hydra config group이다.
 
 ```
 experiment/
 ├── train/<topic>/<YYMMDD_round>/<YYMMDD-name>.yaml   # train.py / eval.py / analyze.py 공용 (experiment/train=...)
-└── compare/<YYMMDD-name>.yaml                        # 여러 실험을 묶어 비교 (configs/compare.yaml, experiment/compare=...)
 ```
 
 ## train/ 계층

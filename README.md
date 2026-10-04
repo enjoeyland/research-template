@@ -22,7 +22,6 @@ fork해서, 실제 연구 프로젝트(Medical-CausalInference, JointDLM)에서 
 |---|---|
 | `configs/` | Hydra 설정 (train / eval / analyze, data, model, trainer, callbacks, logger, paths, debug) |
 | `configs/experiment/train/` | 실험 1개 = yaml 1개, `<topic>/<YYMMDD_round>/<YYMMDD-name>.yaml` ([규칙](configs/experiment/README.md)) |
-| `configs/experiment/compare/` | 여러 실험을 묶어 비교하는 설정 (`configs/compare.yaml`용) |
 | `src/train.py`, `eval.py`, `analyze.py` | Hydra 엔트리포인트 |
 | `src/data/`, `src/models/` | LightningDataModule / LightningModule (toy 예제 포함). `forward`는 `ModelOutput`을 반환 |
 | `src/losses/`, `src/metrics/` | loss 항(`CompositeLoss`)과 metric(`TaskMetrics`). 둘 다 `ModelOutput`을 읽고 config(`configs/losses`, `configs/metrics`)로 구성 (CLAUDE.md §3.1) |
