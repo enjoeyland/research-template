@@ -99,7 +99,7 @@ srun --partition="$SLURM_PARTITION" --qos="$SLURM_QOS" --gres="$SLURM_GRES" \
 
 ### 3.1 모델 / loss / metric 인터페이스 (한 번 계산해서 둘 다 읽는다)
 
-- `forward`는 스텝당 `ModelOutput`(`src/models/components/model_output.py`: `logits`, `target`, `preds`, `extras`)
+- `forward`는 스텝당 `ModelOutput`(`src/utils/model_output.py`: `logits`, `target`, `preds`, `extras`)
   **하나**를 반환한다. loss와 metric이 **같은 객체**를 읽으므로 같은 값을 두 번 계산하지 않는다.
   `training_step`은 `outputs = self.forward(batch)` → `loss_dict = self.loss_fn(outputs, batch)` →
   `self.metrics.on_step(split, outputs, batch, ...)`.

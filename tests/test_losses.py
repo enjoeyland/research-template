@@ -2,7 +2,7 @@ import pytest
 import torch
 
 from src.losses import CompositeLoss, CrossEntropy, LossTerm
-from src.models.components.model_output import ModelOutput
+from src.utils.model_output import ModelOutput
 
 
 class _Const(LossTerm):

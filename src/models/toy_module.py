@@ -20,7 +20,7 @@ from lightning import LightningModule
 
 from src.losses import CompositeLoss
 from src.metrics import TaskMetrics
-from src.models.components.model_output import ModelOutput
+from src.utils.model_output import ModelOutput
 
 Batch = Tuple[torch.Tensor, torch.Tensor]
 

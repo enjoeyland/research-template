@@ -13,7 +13,7 @@ from lightning import LightningModule, Trainer
 from torch.utils.data import DataLoader, Dataset
 
 from src.metrics import ClassificationMetricGroup, MetricGroup, MulticlassAccuracy, TaskMetrics
-from src.models.components.model_output import ModelOutput
+from src.utils.model_output import ModelOutput
 
 
 class _AccGroup(MetricGroup):

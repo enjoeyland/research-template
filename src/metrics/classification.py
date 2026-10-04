@@ -4,7 +4,7 @@ from torchmetrics.classification import MulticlassAccuracy as _TMMulticlassAccur
 from torchmetrics.classification import MulticlassF1Score as _TMMulticlassF1Score
 
 from src.metrics.metric_base import MetricHandler
-from src.models.components.model_output import get_field
+from src.utils.model_output import get_field
 
 
 class _OutputsHandler(MetricHandler):

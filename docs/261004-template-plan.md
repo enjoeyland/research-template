@@ -210,4 +210,4 @@ MNIST를 지우면 `tests/`의 train/eval/sweep smoke test와 `make train`이 �
 
 MCCG 조사 결과: loss는 (a) `ConceptModelOutput` dataclass, (b) 580줄 forward 안의 중첩 클로저(`_loss_cat` 등) + 문자열 플래그(`continuous_loss`, `repr_indep_loss_type`), (c) components의 제각각 시그니처 함수로 섞여 있었고, metric은 `outputs` 자리에 `None`을 넘기고 `preds=`/`target=` 고정 kwargs로 받아 입력이 다른 지표마다 group 서브클래스와 `on_step` override가 필요했다.
 
-결정: `src/losses/`(metrics와 대칭, config 그룹 `losses`) + `ModelOutput` dataclass(+`extras`). 경계 규칙은 "outputs = 모델만 만들 수 있는 값, 결정적 전처리 = loss/metric 소유, 필요한 필드는 `requires`/`preds_key`로 선언". 규약은 CLAUDE.md §3.1. 구현: `src/losses/`, `src/models/components/model_output.py`, `configs/losses/ce.yaml`, metric의 `preds_key`/`target_key`/`name_prefix`, `tests/test_losses.py`. 아직 하지 않은 것: MCCG 쪽 이식(템플릿 스켈레톤만).
+결정: `src/losses/`(metrics와 대칭, config 그룹 `losses`) + `ModelOutput` dataclass(+`extras`). 경계 규칙은 "outputs = 모델만 만들 수 있는 값, 결정적 전처리 = loss/metric 소유, 필요한 필드는 `requires`/`preds_key`로 선언". 규약은 CLAUDE.md §3.1. 구현: `src/losses/`, `src/utils/model_output.py`, `configs/losses/ce.yaml`, metric의 `preds_key`/`target_key`/`name_prefix`, `tests/test_losses.py`. 아직 하지 않은 것: MCCG 쪽 이식(템플릿 스켈레톤만).

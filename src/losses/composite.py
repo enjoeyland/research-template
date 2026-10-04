@@ -6,7 +6,7 @@ import torch
 from torch import nn
 
 from src.losses.base import LossTerm
-from src.models.components.model_output import get_field
+from src.utils.model_output import get_field
 
 
 class CompositeLoss(nn.Module):
