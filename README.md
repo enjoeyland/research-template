@@ -10,9 +10,9 @@ fork해서, 실제 연구 프로젝트(Medical-CausalInference, JointDLM)에서 
 2. `cp .env.example .env` → `CHECKPOINT_DIR`, `VENV` 등 채우기.
 3. venv 만들고 `requirements.txt` 설치 (헤더 설명 참고, GPU 클러스터에서는 torch를 먼저 설치).
 4. 예제(toy)를 내 것으로 교체:
-   `src/data/toy_datamodule.py`, `src/models/toy_module.py`, `configs/{data,model}/toy.yaml`,
+   `src/data/toy_datamodule.py`, `src/models/toy_module.py`, `configs/{data,model}/toy.yaml`, `configs/metrics/classification_task.yaml`,
    `configs/experiment/train/toy/`, `configs/hparams_search/toy_optuna.yaml`.
-   모델 config에는 `metrics.monitor_metric` / `metrics.monitor_mode`를 유지한다 (체크포인트/early stopping이 읽는다).
+   모델 config에는 `metrics`(TaskMetrics, `monitor_metric`/`monitor_mode` 포함)를 유지한다 (체크포인트/early stopping이 읽는다; `val/<name>_best`, `val/overfit_gap`도 여기서 나온다).
 5. `CLAUDE.md` §9(프로젝트별 메모)와 `docs/CONTEXT.md`를 채운다. 외부 코드는 `third_party/`에 submodule로 추가한다.
 6. `pre-commit install`, `make test`.
 

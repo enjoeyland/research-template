@@ -1,16 +1,13 @@
 """Classification metrics implementing MetricHandler (minimal set; add more following this pattern)."""
 
 from torchmetrics.classification import MulticlassAccuracy as _TMMulticlassAccuracy
+from torchmetrics.classification import MulticlassF1Score as _TMMulticlassF1Score
 
 from src.metrics.metric_base import MetricHandler
 
 
-class MulticlassAccuracy(_TMMulticlassAccuracy, MetricHandler):
-    """Multiclass accuracy updated via ``preds`` / ``target`` kwargs.
-
-    Inherits the concrete torchmetrics class (not ``Accuracy``) so ``__new__`` task-dispatch does not
-    break under multiple inheritance with MetricHandler.
-    """
+class _PredsTargetHandler(MetricHandler):
+    """``on_step`` / ``on_epoch_end`` shared by torchmetrics-backed classification metrics."""
 
     def on_step(
         self,
@@ -36,3 +33,15 @@ class MulticlassAccuracy(_TMMulticlassAccuracy, MetricHandler):
         # nothing is logged (vs compute() raising). update_called is torchmetrics' own flag, cleared by
         # reset(), so this re-arms each epoch with no manual bookkeeping.
         return self.compute() if self.update_called else None
+
+
+class MulticlassAccuracy(_PredsTargetHandler, _TMMulticlassAccuracy):
+    """Multiclass accuracy updated via ``preds`` / ``target`` kwargs.
+
+    Inherits the concrete torchmetrics class (not ``Accuracy``) so ``__new__`` task-dispatch does not
+    break under multiple inheritance with MetricHandler.
+    """
+
+
+class MulticlassF1Score(_PredsTargetHandler, _TMMulticlassF1Score):
+    """Macro-averaged F1 (torchmetrics default ``average="macro"``)."""

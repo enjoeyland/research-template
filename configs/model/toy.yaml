@@ -1,4 +1,7 @@
 # Placeholder model. Replace with your own LightningModule.
+defaults:
+  - /metrics@metrics: classification_task
+
 _target_: src.models.toy_module.ToyModule
 
 optimizer:
@@ -10,8 +13,6 @@ n_features: 16
 n_classes: 3
 hidden_size: 32
 
-# read by configs/callbacks/default.yaml (checkpointing / early stopping) -- keep these two keys
+# `metrics` (from the defaults above) is a TaskMetrics; callbacks (checkpointing / early stopping) read
+# ${model.metrics.monitor_metric} / ${model.metrics.monitor_mode} -- keep a `metrics` node with those two keys
 # in every model config, pointing at a metric the module logs.
-metrics:
-  monitor_metric: val/acc
-  monitor_mode: max

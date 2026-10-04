@@ -1,17 +1,22 @@
 """Small MLP classifier -- a placeholder showing the LightningModule conventions of this repo.
 
 Conventions worth keeping in your own modules:
-  * log ``val/<metric>`` and ``val/<metric>_best`` so ``model.metrics.monitor_metric`` can point at it,
-  * log metric *objects* with ``on_epoch=True`` (Lightning resets them) -- never call ``.reset()`` by hand
-    (see CLAUDE.md §3).
+  * metrics live in a ``TaskMetrics`` (src/metrics, configured in ``configs/metrics/*.yaml`` and injected
+    through the model config); it also provides ``val/<name>_best`` and ``val/overfit_gap``,
+  * ``on_step`` returns metric OBJECTS -> log them with ``log_dict(..., on_epoch=True)`` (Lightning resets
+    them each epoch -- never call ``.reset()`` by hand, CLAUDE.md §3),
+  * ``self.metrics.reset_best()`` once from ``on_train_start``,
+  * the monitored metric (``model.metrics.monitor_metric``) must be one the module logs.
 """
 
 from typing import Any, Dict, Tuple
 
 import torch
 from lightning import LightningModule
-from torchmetrics import MaxMetric, MeanMetric
-from torchmetrics.classification.accuracy import Accuracy
+
+from src.metrics import TaskMetrics
+
+Batch = Tuple[torch.Tensor, torch.Tensor]
 
 
 class ToyModule(LightningModule):
@@ -20,12 +25,13 @@ class ToyModule(LightningModule):
         optimizer: torch.optim.Optimizer,
         n_features: int,
         n_classes: int,
+        metrics: TaskMetrics,
         hidden_size: int = 32,
-        metrics: Dict[str, Any] | None = None,
     ) -> None:
         super().__init__()
-        # `metrics` only carries monitor_metric / monitor_mode for the callbacks, not a module hparam
+        # the metrics object is a module of its own, not a hyperparameter
         self.save_hyperparameters(logger=False, ignore=["metrics"])
+        self.metrics = metrics
 
         self.net = torch.nn.Sequential(
             torch.nn.Linear(n_features, hidden_size),
@@ -34,54 +40,48 @@ class ToyModule(LightningModule):
         )
         self.criterion = torch.nn.CrossEntropyLoss()
 
-        task = "multiclass"
-        self.train_acc = Accuracy(task=task, num_classes=n_classes)
-        self.val_acc = Accuracy(task=task, num_classes=n_classes)
-        self.test_acc = Accuracy(task=task, num_classes=n_classes)
-        self.train_loss = MeanMetric()
-        self.val_loss = MeanMetric()
-        self.test_loss = MeanMetric()
-        self.val_acc_best = MaxMetric()
-
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.net(x)
 
-    def model_step(self, batch: Tuple[torch.Tensor, torch.Tensor]):
+    def model_step(self, batch: Batch):
         x, y = batch
         logits = self.forward(x)
         return self.criterion(logits, y), torch.argmax(logits, dim=1), y
 
     def on_train_start(self) -> None:
-        # sanity-check validation batches would otherwise leak into the best value
-        self.val_loss.reset()
-        self.val_acc.reset()
-        self.val_acc_best.reset()
+        # drops what the pre-training sanity-check validation pass wrote into the best-score tracker
+        self.metrics.reset_best()
 
-    def training_step(self, batch, batch_idx: int) -> torch.Tensor:
-        loss, preds, targets = self.model_step(batch)
-        self.train_loss(loss)
-        self.train_acc(preds, targets)
-        self.log("train/loss", self.train_loss, on_step=False, on_epoch=True, prog_bar=True)
-        self.log("train/acc", self.train_acc, on_step=False, on_epoch=True, prog_bar=True)
+    def _step(self, split: str, batch: Batch, batch_idx: int) -> torch.Tensor:
+        loss, preds, target = self.model_step(batch)
+        key = "val" if split == "valid" else split
+        logged = {f"{key}/loss": loss}
+        logged.update(self.metrics.on_step(split, None, batch, batch_idx, preds=preds, target=target))
+        self.log_dict(logged, on_step=False, on_epoch=True, prog_bar=True)
         return loss
 
-    def validation_step(self, batch, batch_idx: int) -> None:
-        loss, preds, targets = self.model_step(batch)
-        self.val_loss(loss)
-        self.val_acc(preds, targets)
-        self.log("val/loss", self.val_loss, on_step=False, on_epoch=True, prog_bar=True)
-        self.log("val/acc", self.val_acc, on_step=False, on_epoch=True, prog_bar=True)
+    def _epoch_end(self, split: str) -> None:
+        values = self.metrics.on_epoch_end(split)
+        if values:
+            self.log_dict(values, prog_bar=True, sync_dist=True)
+
+    def training_step(self, batch: Batch, batch_idx: int) -> torch.Tensor:
+        return self._step("train", batch, batch_idx)
+
+    def on_train_epoch_end(self) -> None:
+        self._epoch_end("train")  # also caches the train score that val/overfit_gap compares against
+
+    def validation_step(self, batch: Batch, batch_idx: int) -> None:
+        self._step("valid", batch, batch_idx)
 
     def on_validation_epoch_end(self) -> None:
-        self.val_acc_best(self.val_acc.compute())
-        self.log("val/acc_best", self.val_acc_best.compute(), sync_dist=True, prog_bar=True)
+        self._epoch_end("valid")  # logs val/acc_best and val/overfit_gap too
 
-    def test_step(self, batch, batch_idx: int) -> None:
-        loss, preds, targets = self.model_step(batch)
-        self.test_loss(loss)
-        self.test_acc(preds, targets)
-        self.log("test/loss", self.test_loss, on_step=False, on_epoch=True, prog_bar=True)
-        self.log("test/acc", self.test_acc, on_step=False, on_epoch=True, prog_bar=True)
+    def test_step(self, batch: Batch, batch_idx: int) -> None:
+        self._step("test", batch, batch_idx)
+
+    def on_test_epoch_end(self) -> None:
+        self._epoch_end("test")
 
     def configure_optimizers(self) -> Dict[str, Any]:
         return {"optimizer": self.hparams.optimizer(params=self.trainer.model.parameters())}
