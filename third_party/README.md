@@ -7,7 +7,7 @@
 - 원본을 직접 수정하지 않는다. 고쳐야 하면 GitHub에서 fork한 뒤 submodule URL을 fork로 바꾼다.
 - 우리 코드(`src/`)는 `third_party/<repo>`를 import하거나 필요한 부분만 `src/`로 옮겨 쓴다. 옮겨 쓸 때는 출처
   경로와 commit을 주석으로 남긴다.
-- 이 폴더의 파일은 우리 `pre-commit`/테스트 대상이 아니다.
+- 이 폴더의 파일은 우리 테스트 대상이 아니다.
 
 ## 환경: 기본적으로 repo마다 venv를 따로 만들어 쓴다
 
