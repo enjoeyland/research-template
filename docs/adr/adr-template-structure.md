@@ -80,6 +80,8 @@ research-template/
 
 **검증 도구**
 - 포맷터·pre-commit·CI 품질 워크플로는 두지 않는다(두 프로젝트 모두 훅이 설치되지 않아 실제로는 돌지 않았다). 테스트는 `pytest`(`make test`).
+- GitHub Actions는 **CPU 단위 테스트만 도는 최소 workflow 하나**(`.github/workflows/test.yml`: ubuntu, Python 3.12, CPU torch, `pytest -k "not slow"`). GPU 학습과
+  SLURM 스윕은 CI에서 검증할 수 없으므로 클러스터 smoke test(CLAUDE.md §1)를 대체하지 않는다.
 
 ### 3. 사용법 (최상위 `README.md`는 프로젝트 README로 교체되므로 여기가 기준)
 
@@ -123,6 +125,7 @@ JointDLM식 `results.py`, 실험 비교 스크립트(`compare_experiments.py`), 
 ## 변경 이력
 - 2026-10-04: 최초 작성.
 - 2026-10-05: 사용법(새 프로젝트 체크리스트, 실행 명령, skills)을 이 문서에 추가 — 최상위 README가 프로젝트 README로 교체되기 때문.
+- 2026-10-05: GitHub Actions를 최소 CPU 테스트 workflow 하나로 축소.
 - 2026-10-05: `docs/implementation/`(코드 수정 이력) 추가. 캐시 위치를 `src/cache_env.py` 대신 `.env.example`로 이동.
 - 2026-10-04: 모델/loss/metric 규약을 `src/models|losses|metrics/README.md`로 옮기고 CLAUDE.md에서는 삭제(이후 섹션 번호가 한 칸씩 당겨짐: 문서화 §3, 실험 진행 §4, 보고 §5, 그려줘 §6, 파일 관리 §7, 프로젝트별 메모 §8).
 - 2026-10-04: 실행 산출물을 task-first(`logs/<task>/runs/<exp>`)에서 experiment-first(`logs/runs/<exp>/{train,eval,analyze,checkpoints}`)로 변경, `results/` 폴더 삭제, 그림 승격 규칙 추가.

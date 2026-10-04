@@ -1,139 +1,32 @@
+# Minimal CI: the CPU unit tests (config composition, losses, metrics, trends, utils). It cannot run training on a
+# GPU or SLURM sweeps -- those stay cluster smoke tests (CLAUDE.md §1). See the Actions tab after a push.
 name: Tests
 
 on:
   push:
     branches: [main]
   pull_request:
-    branches: [main, "release/*", "dev"]
+  workflow_dispatch: # run by hand from the Actions tab
 
 jobs:
-  run_tests_ubuntu:
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      fail-fast: false
-      matrix:
-        os: ["ubuntu-latest"]
-        python-version: ["3.8", "3.9", "3.10"]
-
-    timeout-minutes: 20
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v3
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest
-          pip install sh
-
-      - name: List dependencies
-        run: |
-          python -m pip list
-
-      - name: Run pytest
-        run: |
-          pytest -v
-
-  run_tests_macos:
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      fail-fast: false
-      matrix:
-        os: ["macos-latest"]
-        python-version: ["3.8", "3.9", "3.10"]
-
-    timeout-minutes: 20
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v3
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest
-          pip install sh
-
-      - name: List dependencies
-        run: |
-          python -m pip list
-
-      - name: Run pytest
-        run: |
-          pytest -v
-
-  run_tests_windows:
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      fail-fast: false
-      matrix:
-        os: ["windows-latest"]
-        python-version: ["3.8", "3.9", "3.10"]
-
-    timeout-minutes: 20
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v3
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest
-
-      - name: List dependencies
-        run: |
-          python -m pip list
-
-      - name: Run pytest
-        run: |
-          pytest -v
-
-  # upload code coverage report
-  code-coverage:
+  test:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v2
+      - uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
 
-      - name: Install dependencies
+      - name: Install (CPU torch first so pip does not download CUDA wheels, then the rest)
         run: |
           python -m pip install --upgrade pip
+          pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
           pip install -r requirements.txt
-          pip install pytest
-          pip install pytest-cov[toml]
-          pip install sh
 
-      - name: Run tests and collect coverage
-        run: pytest --cov src # NEEDS TO BE UPDATED WHEN CHANGING THE NAME OF "src" FOLDER
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+      - name: Test
+        run: pytest -k "not slow" -q -o log_cli=false
