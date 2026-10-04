@@ -39,7 +39,6 @@ research-template/
 ├── .gitignore                         ✎ /data/* + !.gitkeep, checkpoints, logs/, outputs/, wandb/, .env
 ├── .gitmodules                        ★ (빈 파일 또는 없음; third_party에 submodule 추가 시 생성)
 ├── .project-root                      ·
-├── .pre-commit-config.yaml            ✎ 포맷터 비활성, interrogate 조정
 ├── Makefile                           ✎ install / analyze / venv-activate-hint 추가
 ├── pyproject.toml                     ·
 ├── requirements.txt                   ✎ cu128 핀 방식(주석으로 설명) + analysis 의존성(pandas, matplotlib, scikit-learn)
@@ -98,7 +97,7 @@ research-template/
 │   └── .gitkeep
 ├── tests/                             ✎ conftest(절대 batch 수), test_metrics(reset 규칙 검증), toy 기반으로 교체
 ├── data/.gitkeep, logs/.gitkeep, configs/local/.gitkeep   ·
-└── .github/                           ✎ test.yml, code-quality-*.yaml, PULL_REQUEST_TEMPLATE.md만 유지
+└── .github/                           ✎ test.yml, PULL_REQUEST_TEMPLATE.md만 유지
 ```
 
 ### 2-A. 학습 코드/설정 (코드 단계, MCCG diff에서 이식)
@@ -216,3 +215,7 @@ MCCG 조사 결과: loss는 (a) `ConceptModelOutput` dataclass, (b) 580줄 forwa
 
 - `results.py`(JointDLM식 results.csv 기록기): 제외.
 - `compare_experiments.py` + `configs/compare.yaml` + `configs/experiment/compare/`: 제외하고 템플릿에서 삭제. (MCCG의 비교 스크립트는 domain-shift 평가 결과에 묶여 있어 일반화할 가치가 낮다고 판단.) 6-5의 "compare 이름 유지" 결정은 이 결정으로 대체됨.
+
+### 6-9. pre-commit 전체 제거 (2026-10-04)
+
+MCCG는 포맷터만 껐을 뿐 나머지 훅은 켜 둔 채였지만 `.git/hooks/pre-commit`이 설치돼 있지 않아 실제로는 한 번도 돌지 않았고(JointDLM은 가져가지도 않음), 그래서 `.pre-commit-config.yaml`을 통째로 제거. 함께 제거: Makefile `format`, requirements/environment의 `pre-commit`, `.github/workflows/code-quality-*.yaml`(pre-commit을 돌리는 CI), PR 템플릿의 pre-commit 체크 항목, README 체크리스트의 `pre-commit install`. 코드 스타일은 수동 관리(CLAUDE.md의 "기존 코드 스타일을 따른다" 방침).
