@@ -67,7 +67,7 @@ research-template/
 
 **저장 위치**
 - `/lustre/<user>/` = 장기 보관(체크포인트, 남길 결과), `/scratch2/<user>/` = 지워져도 되는 것(cache, tmp, venvs).
-- 사전학습 모델/데이터셋 캐시는 `~/.cache`가 아니라 `/scratch2/$USER/cache`로 간다. 코드가 아니라 `.env.example`의 `HF_HOME`/`TORCH_HOME` 등으로 정하고(`${USER}` 확장),
+- 사전학습 모델/데이터셋 캐시는 `~/.cache`가 아니라 `/scratch2/$USER/cache`로 간다. 코드가 아니라 `.env.example`의 `HUGGINGFACE_HUB_CACHE`와 `TMPDIR`로 정하고(`${USER}` 확장),
   `train/eval/analyze`가 `.env`를 먼저 읽으므로 라이브러리 import 전에 적용된다.
 - 무거운 데이터셋은 repo 안에 복사하지 않고 `data/<dataset>` 심볼릭 링크. datamodule은 `${paths.data_dir}/<dataset>`를 `require_data_path()`로 연다.
 - 외부 코드는 `third_party/`의 git submodule이고, 원본은 직접 수정하지 않는다. 각 repo는 자기 venv(`/scratch2/$USER/venvs/<repo>`)를 만든다.
