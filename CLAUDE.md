@@ -138,12 +138,6 @@ srun --partition="$SLURM_PARTITION" --qos="$SLURM_QOS" --gres="$SLURM_GRES" \
   옛 체크포인트를 분석할 땐 그 시점 값을 명시적으로 넘길 것.
 - **checkpoint 재개/평가** — torch>=2.6은 `torch.load` 기본값이 `weights_only=True`라 hparams에 든
   `omegaconf.ListConfig` 등을 못 읽는다. 우리 자신의 체크포인트는 `weights_only=False`로 읽는다.
-- **`ModelCheckpoint`를 여러 개 쓸 때 `state_key` 충돌** — Lightning은 (monitor, mode, every_n_*)이 같은 두 체크포인트를 거부한다
-  (`Found more than one stateful callback of type ModelCheckpoint`). resume용은 `ResumeModelCheckpoint`(고정 키)를 쓴다 —
-  `max_epochs`가 resume 간격(10)과 같을 때만 터져서 늦게 발견됐다. 새 체크포인트 콜백을 추가하면 `max_epochs` 값을 바꿔 가며 Trainer를 만들어 볼 것.
-- **`ModelCheckpoint`의 `save_last`** — 모니터 지표가 천장에 닿아 더 이상 개선되지 않으면 "last"도
-  같이 멈춘다. 마지막 epoch 체크포인트가 필요하면 `configs/callbacks/model_checkpoint_last.yaml`을 쓴다.
-
 ## 5. 실험 결과 보고 형식
 
 실험(학습/분석 잡)이 끝나고 사용자에게 결과를 알려줄 때는 아래 6가지를 **전부** 포함해서
