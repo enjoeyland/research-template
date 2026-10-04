@@ -24,7 +24,6 @@ research-template/
 │   ├── data/ model/ losses/ metrics/ callbacks/ logger/ trainer/ paths/ hydra/ extras/ debug/ hparams_search/
 ├── src/
 │   ├── train.py, eval.py, analyze.py            Hydra 엔트리포인트
-│   ├── cache_env.py                             캐시 기본 위치 (torch/transformers import 전에 호출)
 │   ├── data/            LightningDataModule (+ components/)
 │   ├── models/          LightningModule (+ components/: 인코더·head 같은 구조 부품)
 │   ├── losses/          LossTerm, CompositeLoss, PassBlend, FieldTerm
@@ -68,7 +67,8 @@ research-template/
 
 **저장 위치**
 - `/lustre/<user>/` = 장기 보관(체크포인트, 남길 결과), `/scratch2/<user>/` = 지워져도 되는 것(cache, tmp, venvs).
-- 사전학습 모델/데이터셋 캐시는 `~/.cache`가 아니라 `/scratch2/$USER/cache`로 (`src/cache_env.py`, 설정되지 않은 변수만 채움).
+- 사전학습 모델/데이터셋 캐시는 `~/.cache`가 아니라 `/scratch2/$USER/cache`로 간다. 코드가 아니라 `.env.example`의 `HF_HOME`/`TORCH_HOME` 등으로 정하고(`${USER}` 확장),
+  `train/eval/analyze`가 `.env`를 먼저 읽으므로 라이브러리 import 전에 적용된다.
 - 무거운 데이터셋은 repo 안에 복사하지 않고 `data/<dataset>` 심볼릭 링크. datamodule은 `${paths.data_dir}/<dataset>`를 `require_data_path()`로 연다.
 - 외부 코드는 `third_party/`의 git submodule이고, 원본은 직접 수정하지 않는다. 각 repo는 자기 venv(`/scratch2/$USER/venvs/<repo>`)를 만든다.
 
@@ -94,6 +94,6 @@ JointDLM식 `results.py`, 실험 비교 스크립트(`compare_experiments.py`), 
 
 ## 변경 이력
 - 2026-10-04: 최초 작성.
-- 2026-10-05: `docs/implementation/`(코드 수정 이력) 추가.
+- 2026-10-05: `docs/implementation/`(코드 수정 이력) 추가. 캐시 위치를 `src/cache_env.py` 대신 `.env.example`로 이동.
 - 2026-10-04: 모델/loss/metric 규약을 `src/models|losses|metrics/README.md`로 옮기고 CLAUDE.md에서는 삭제(이후 섹션 번호가 한 칸씩 당겨짐: ADR §3, 실험 진행 §4, 보고 §5, 그려줘 §6, 파일 관리 §7, 프로젝트별 메모 §8).
 - 2026-10-04: 실행 산출물을 task-first(`logs/<task>/runs/<exp>`)에서 experiment-first(`logs/runs/<exp>/{train,eval,analyze,checkpoints}`)로 변경, `results/` 폴더 삭제, 그림 승격 규칙 추가.
