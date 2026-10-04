@@ -47,11 +47,10 @@ research-template/
 ├── docs/
 │   ├── README.md                      ★ 문서 색인 + 파일명 규칙 + 표기 규칙([실측]/[제안]/[해석]/[미확인])
 │   ├── CONTEXT.md                     ★ 도메인 용어집 템플릿 (Language / Avoid 형식)
-│   ├── TODO.md                        ★ 실험 트래커 템플릿 ([ ] / [~] / [x], 제출 주의사항)
 │   ├── adr/README.md                  ★ ADR 규칙 + 템플릿 (YYMMDD-adr-주제.md)
 │   ├── proposals/.gitkeep             ★ 제안/설계/예상 (실측 금지)
 │   ├── experiments/.gitkeep           ★ 실행 기록/결과/해석
-│   ├── ideation/.gitkeep              ★ (MCCG 방식, 선택)
+│   ├── papers/.gitkeep                ★ 참고 논문 PDF (로컬 보관, gitignore)
 │   ├── figures/.gitkeep               ★
 │   └── 261004-template-plan.md        ← 이 문서 (개편 완료 후 adr로 이동 또는 삭제)
 ├── third_party/                       ★ **상설 폴더 — 외부 코드(git submodule) 전용**
@@ -70,7 +69,7 @@ research-template/
 │   ├── metrics/classification_task.yaml ★ toy 예제용
 │   ├── data/toy.yaml, model/toy.yaml  ★ §3 결정 시
 │   ├── debug/smoke.yaml               ★ JointDLM에서 이식·일반화: 소량 step + 결과를 logs/smoke/로 격리
-│   ├── experiment/train/.gitkeep      ★ 실험 1개 = YYMMDD_이름.yaml (헤더에 의도·비교·실행 명령)
+│   ├── experiment/train/<topic>/<YYMMDD_round>/<YYMMDD-name>.yaml  ★ 실험 1개 = 1파일 (README.md에 규칙)
 │   ├── experiment/compare/.gitkeep    ★
 │   └── (그 외 debug/extras/logger/trainer/local 은 유지)
 ├── src/
@@ -80,8 +79,8 @@ research-template/
 │   ├── data/                          ★ toy_datamodule.py (+ components/)
 │   ├── models/                        ★ toy_module.py (+ components/)
 │   ├── metrics/                       ★ metric_base.py (TaskMetrics/MetricGroup) + classification 최소셋
-│   ├── analysis/
-│   │   └── README.md                  ★ 규칙: 재사용 분석 = src/analysis/<YYMMDD_topic>/, 만들기 전에 기존 것 먼저 확인
+│   ├── analysis/README.md             ★ 재사용 분석 = src/analysis/<YYMMDD_topic>/, 만들기 전에 기존 것 먼저 확인
+│   ├── studies/README.md              ★ 일회성 검증/진단 = src/studies/<YYMMDD_topic>/ (로그는 logs/studies/)
 │   └── utils/
 │       ├── utils.py                   ✎ link_checkpoints_dir() 추가
 │       ├── callbacks.py               ★ NamedLastModelCheckpoint
@@ -95,8 +94,6 @@ research-template/
 │       ├── check_node_health.sh
 │       ├── common/{env,sweep,jobs_per_gpu,launch_sweep,maybe_submit,resume}.sh
 │       └── profiles/{cpu,gpu24,gpu24-cuda118,gpu4090,gpu48,gpu48bio,gpu96}.sh
-├── studies/                           ★ 일회성 검증/진단 코드 (<YYMMDD_topic>/, 로그는 logs/studies/ 로)
-│   └── README.md                      ★
 ├── results/                           ★ 정리된 결과물(results.csv 등) — 커밋 대상. 원본 로그는 logs/
 │   └── .gitkeep
 ├── tests/                             ✎ conftest(절대 batch 수), test_metrics(reset 규칙 검증), toy 기반으로 교체
@@ -128,7 +125,7 @@ research-template/
   5. ADR 작성 기준
   6. 스모크 테스트는 `debug=smoke logger=csv`, wandb는 실제 실험에서만
 - **gotchas는 CLAUDE.md §1~§3·§5로 통합**(`.notes/` 없음): 범용 항목만 — GPU 확인, wandb 끄기, 스윕 스크립트 컨벤션(같은 config → 같은 .sh, 라운드마다 덮어쓰기), 파일 위치, metrics `.reset()` 금지, 체크포인트 로드 시 hparam 기본값 주의, 실험 진행 4단계(진단→설계→판정기준 선기재→결과 기록), 결과 보고 6항목. 프로젝트 특화 항목(MILK10k 분할, 특정 venv 경로, 특정 날짜 사건)은 제외.
-- **docs/**: 색인·표기 규칙·`CONTEXT.md`/`TODO.md`/`adr/README.md` 템플릿.
+- **docs/**: 색인·표기 규칙·`CONTEXT.md`/`adr/README.md` 템플릿.
 - **skills**: 복사하지 않음. README의 "Skills" 절에 목록과 설치법만 기록(`ce-ideate`, `grill-with-docs`, `domain-modeling`, `improve-codebase-architecture`, `setup-matt-pocock-skills`; MCCG `skills-lock.json` 참조). `baseline-adapt`는 MCCG 전용이라 제외.
 
 ## 3. toy 예제 (MNIST 제거의 부작용 처리)
@@ -191,3 +188,20 @@ MNIST를 지우면 `tests/`의 train/eval/sweep smoke test와 `make train`이 �
 - P2: `scripts/sbatch/` 복사 (§5-6 확정 필요)
 - P3: `docs/` 스켈레톤, README, `third_party/README.md`
 - `CLAUDE.md` 개선 후보: JointDLM의 "로그인 서버에서 python 실행 전부 금지" 규칙(MCCG보다 엄격)을 §1에 합칠지
+
+### 6-5. 추가 결정 (2026-10-04, 구현 중 사용자 요청)
+
+- `docs/TODO.md`, `docs/ideation/` 삭제 (ideation은 proposals와 중복).
+- `studies/` → `src/studies/` (일회성 검증도 `src` 아래 두어 import/rootutils 규칙을 `src/analysis/`와 통일). 로그는 계속 `logs/studies/`.
+- `configs/experiment/compare/` 이름 유지: `analysis`는 `src/analysis`(재사용 분석 코드)·`analyze.py`와 겹쳐 혼동되고, 이 그룹의 실제 역할은 "여러 실험을 묶어 비교"이므로 `compare`가 정확. `analyze.py`는 `experiment/train`을 공유.
+- `configs/experiment/train/` 계층: `<topic>/<YYMMDD_round>/<YYMMDD-name>.yaml` (MCCG 방식). 파일 이름 = `experiment_name`. 규칙은 `configs/experiment/README.md`.
+- CLAUDE.md의 smoke test를 `debug=smoke logger=csv`로 갱신 (`fast_dev_run`은 더 가벼운 대안으로 병기).
+- `docs/papers/` 추가: 논문 PDF 로컬 보관(`docs/papers/*` gitignore, `.gitkeep`만 추적).
+- `third_party/README.md`: repo마다 자기 venv(`/scratch2/$USER/venvs/<repo>`)를 만들어 쓰는 것을 기본 규칙으로 명시.
+
+### 6-6. 구현 중 발견한 문제
+
+- 공유 venv `/scratch2/khmin1104/venvs/medical_ccg`가 깨져 있음 (`antlr4`, `pluggy`의 `__init__.py` 없음, 2026-10-04 19:10 수정 흔적). 수정하지 않고 검증용 venv `/scratch2/khmin1104/venvs/research-template`(CPU torch)를 새로 만들어 테스트했다.
+- 복사한 `scripts/sbatch/common/env.sh`는 `.env`가 없으면 `set -e`+`pipefail` 때문에 조용히 종료됨 → `|| true` 추가. (MCCG 원본에도 같은 잠재 버그가 있으나 `.env`가 항상 있어 드러나지 않음.)
+- `template.sh`는 sbatch가 스크립트를 spool로 복사하므로 `BASH_SOURCE` 대신 `SLURM_SUBMIT_DIR`로 `common/`을 찾도록 수정. `LOGGER=csv` 환경변수 지원 추가.
+- 검증: `pytest`(느린 테스트 포함) train/eval/resume/ddp_sim 통과, `sh` 패키지가 없어 sweep 테스트 7개는 skip. toy 실험 `train.py` + `debug=smoke` 통과.
