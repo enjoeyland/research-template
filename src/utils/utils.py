@@ -1,3 +1,4 @@
+import os
 import warnings
 from importlib.util import find_spec
 from pathlib import Path
@@ -38,6 +39,22 @@ def link_checkpoints_dir(cfg: DictConfig) -> None:
         link.symlink_to(ckpt_dir, target_is_directory=True)
     except FileExistsError:
         pass
+
+
+def require_data_path(path, hint: str = "") -> Path:
+    """Return ``path`` if it exists, else raise an error that names the fix.
+
+    Heavy datasets are symlinked into ``data/`` (see data/README.md); a missing or DANGLING link otherwise
+    surfaces deep inside a dataloader as an unrelated error.
+    """
+    path = Path(path)
+    if not path.exists():  # False for a dangling symlink too
+        kind = f"dangling symlink -> {os.readlink(path)}" if path.is_symlink() else "missing"
+        raise FileNotFoundError(
+            f"data path {path} is {kind}. Link the dataset: ln -sfn <real location> {path}"
+            + (f"  ({hint})" if hint else "")
+        )
+    return path
 
 
 def extras(cfg: DictConfig) -> None:

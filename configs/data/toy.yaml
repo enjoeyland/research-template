@@ -1,4 +1,6 @@
 # Synthetic placeholder dataset (no download). Replace with your own datamodule.
+# A real datamodule takes `data_dir: ${paths.data_dir}` (= <repo>/data, where heavy datasets are symlinked,
+# see data/README.md) and opens `<data_dir>/<dataset>` through src.utils.require_data_path().
 _target_: src.data.toy_datamodule.ToyDataModule
 n_samples: 2000
 n_features: 16

@@ -142,6 +142,7 @@ dmypy.json
 configs/local/default.yaml
 /data/*
 !/data/.gitkeep
+!/data/README.md
 /logs/
 .env
 

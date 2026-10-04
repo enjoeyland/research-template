@@ -31,6 +31,7 @@ fork해서, 실제 연구 프로젝트(Medical-CausalInference, JointDLM)에서 
 | `third_party/` | 외부 코드(git submodule) 전용 ([README](third_party/README.md)) |
 | `results/` | 정리된 결과물(표 등). 원본 로그는 `logs/`(gitignore) |
 | `docs/` | `proposals/` 설계, `experiments/` 결과, `adr/` 결정, `figures/` ([색인](docs/README.md)) |
+| `data/` | 무거운 데이터셋의 **심볼릭 링크**만 둔다 (gitignore, [규칙](data/README.md)) |
 | `tests/` | pytest (설정 조합, 학습/평가 smoke test) |
 
 체크포인트는 `logs/train/runs/<experiment_name>/checkpoints/seed<N>_epoch_XXX.ckpt` (`.env`의 `CHECKPOINT_DIR`이 있으면

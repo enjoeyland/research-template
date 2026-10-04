@@ -85,6 +85,9 @@ srun --partition="$SLURM_PARTITION" --qos="$SLURM_QOS" --gres="$SLURM_GRES" \
 - 문서는 용도별로 나눈다: 제안/설계/예상은 `docs/proposals/`, 실행 기록/결과/해석은 `docs/experiments/`,
   결정 기록은 `docs/adr/`. 파일명은 `YYMMDD_주제.md`. **`proposals/`에는 실험 결과(실측 수치, 예상과의 비교)를
   쓰지 않고 `experiments/`에만 쓴다.**
+- **무거운 데이터셋은 `data/`에 심볼릭 링크**로 둔다(`ln -sfn <실제 위치> data/<dataset>`). `data/`는 gitignore(링크는
+  커밋되지 않는다)이고, datamodule은 `${paths.data_dir}/<dataset>`를 `require_data_path()`로 열어 링크가 없거나 끊어졌으면
+  해결 방법이 적힌 오류를 낸다. 데이터를 repo 안에 복사하지 말 것. 자세한 규칙은 `data/README.md`.
 - 외부 코드는 `third_party/`의 git submodule로 둔다. 원본을 직접 수정하지 말 것.
 
 ## 3. `src/metrics/*`: 수동 `.reset()` 호출 금지
