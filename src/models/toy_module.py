@@ -6,10 +6,9 @@ Conventions worth keeping in your own modules (details: CLAUDE.md §3):
     softmax-style preprocessing belongs to the loss / metric,
   * the loss is a ``CompositeLoss`` of named terms (src/losses, configs/losses/*.yaml) injected through the model
     config; it returns ``{"loss": total, "loss_<term>": ...}`` -- backprop ``loss``, log everything,
-  * metrics live in a ``TaskMetrics`` (src/metrics, configs/metrics/*.yaml) that also provides ``val/<name>_best``
-    and ``val/overfit_gap``; ``on_step`` returns metric OBJECTS -> ``log_dict(..., on_epoch=True)`` (Lightning
-    resets them each epoch -- never call ``.reset()`` by hand),
-  * ``self.metrics.reset_best()`` once from ``on_train_start``,
+  * metrics live in a ``TaskMetrics`` (src/metrics, configs/metrics/*.yaml); ``on_step`` returns metric OBJECTS
+    -> ``log_dict(..., on_epoch=True)`` (Lightning resets them each epoch -- never call ``.reset()`` by hand),
+  * ``val/<name>_best`` and ``val/overfit_gap`` need no code here: the ``MetricTrends`` callback derives them,
   * the monitored metric (``model.metrics.monitor_metric``) must be one the module logs.
 """
 
@@ -51,10 +50,6 @@ class ToyModule(LightningModule):
         x, y = batch
         return ModelOutput(logits=self.net(x), target=y)
 
-    def on_train_start(self) -> None:
-        # drops what the pre-training sanity-check validation pass wrote into the best-score tracker
-        self.metrics.reset_best()
-
     def _step(self, split: str, batch: Batch, batch_idx: int) -> torch.Tensor:
         outputs = self.forward(batch)
         loss_dict = self.loss_fn(outputs, batch)
@@ -73,13 +68,13 @@ class ToyModule(LightningModule):
         return self._step("train", batch, batch_idx)
 
     def on_train_epoch_end(self) -> None:
-        self._epoch_end("train")  # also caches the train score that val/overfit_gap compares against
+        self._epoch_end("train")
 
     def validation_step(self, batch: Batch, batch_idx: int) -> None:
         self._step("valid", batch, batch_idx)
 
     def on_validation_epoch_end(self) -> None:
-        self._epoch_end("valid")  # logs val/acc_best and val/overfit_gap too
+        self._epoch_end("valid")
 
     def test_step(self, batch: Batch, batch_idx: int) -> None:
         self._step("test", batch, batch_idx)

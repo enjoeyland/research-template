@@ -95,28 +95,3 @@ def test_metric_reads_configured_keys_and_skips_missing_stream() -> None:
     assert float(group.metrics_valid["gt/acc"].compute()) == 1.0  # read gt_preds, not preds
     # stream absent -> nothing logged
     assert group.on_step("test", ModelOutput(preds=target, target=target), None, 0) == {}
-
-
-class _FixedScore(TaskMetrics):
-    """TaskMetrics whose monitored score is injected, to test the derived trackers in isolation."""
-
-    score = None
-
-    def compute_monitor_score(self, metrics):
-        return self.score
-
-
-def _valid_epoch(mode: str, train: float, val: float):
-    metrics = _FixedScore([_AccGroup()], monitor_metric="val/acc", monitor_mode=mode)
-    metrics.reset_best()
-    metrics._last_train_score = train
-    metrics.score = val
-    return metrics.on_epoch_end("valid")
-
-
-def test_overfit_gap_positive_means_overfitting() -> None:
-    """Positive gap = overfitting for BOTH directions: `max` -> train - val, `min` -> val - train."""
-    out = _valid_epoch("max", train=0.9, val=0.6)  # accuracy: train above val
-    assert abs(out["val/overfit_gap"] - 0.3) < 1e-6 and abs(out["val/acc_best"] - 0.6) < 1e-6
-    out = _valid_epoch("min", train=0.2, val=0.5)  # loss: val above train
-    assert abs(out["val/overfit_gap"] - 0.3) < 1e-6 and abs(out["val/acc_best"] - 0.5) < 1e-6

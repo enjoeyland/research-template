@@ -3,6 +3,7 @@ defaults:
   - model_checkpoint_last
   - early_stopping
   - model_summary
+  - metric_trends
   - progress_bar
   - _self_
 

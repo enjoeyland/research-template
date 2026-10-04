@@ -112,6 +112,11 @@ srun --partition="$SLURM_PARTITION" --qos="$SLURM_QOS" --gres="$SLURM_GRES" \
   바꾼다(`model.loss.terms.ce.weight=0.5`). `requires`에 있는 필드를 모델이 안 내놓으면 명확한 KeyError가 난다.
   loss로 뺄지 모델 안에 둘지: 항이 둘 이상이거나, 모델 간 재사용하거나, 자체 상태/하이퍼파라미터가 있으면 뺀다.
   한 줄짜리 CE는 모델 안에 둬도 된다. 진단값(entropy floor 등)은 loss가 아니라 metric으로 로깅한다.
+- **`val/<name>_best`, `val/overfit_gap` 곡선**(wandb에서 그래프로 보려는 용도)은 모델·metric 코드가 아니라
+  `MetricTrends` 콜백(`src/utils/callbacks.py`, `configs/callbacks/metric_trends.yaml`)이 이미 로깅된 `train/*`·`val/*`에서
+  만든다. `on_train_epoch_end`에서 계산하므로 train(N)과 val(N)이 같은 epoch끼리 짝지어지고(validation 훅에서 읽으면
+  train(N-1)과 짝지어진다), sanity-check 값이 best에 섞이지 않으며, best가 체크포인트에 들어가 resume 후에도 곡선이
+  이어진다. 양수 = 과적합(max 지표는 train-val, min 지표는 val-train). wandb에는 `define_metric(summary=...)`도 건다.
 - **metric** (`src/metrics/`): 읽을 필드는 `preds_key`/`target_key`로 config에서 정한다. 입력이 다른 두 번째 스트림
   (예: `gt_preds`)은 서브클래스·`on_step` override가 아니라 **config에 group을 하나 더 선언**(`name_prefix`,
   `preds_key`)한다. 한 metric 객체에는 한 스트림만 넣을 것(epoch 동안 상태를 쌓기 때문). 필드가 없는 스텝(예: eval에
