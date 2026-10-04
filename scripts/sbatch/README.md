@@ -1,11 +1,9 @@
 # scripts/sbatch
 
-SLURM 스윕 인프라. Medical-CausalInference(`medical_concept_causal_graph/scripts/sbatch/`, 2026-10-04 기준)에서
-**그대로 복사**했다. 이 template가 기준(source of truth)이며, 여러 프로젝트에 복사본이 생기므로 갱신은 여기서
-하고 필요한 프로젝트에 반영한다.
+SLURM 스윕 인프라. 이 template가 기준(source of truth)이며, 여러 프로젝트에 복사본이 생기므로 갱신은 여기서 하고 필요한 프로젝트에 반영한다.
 
-복사 후 바꾼 것은 하나뿐이다: venv 기본값 (`common/env.sh`, `check_node_health.sh`, `resume.sh`)을 특정 프로젝트의
-`medical_ccg` 대신 `$VENV` > `.env`의 `VENV=` > `/scratch2/$USER/venvs/<repo 폴더명>` 순서로 정한다.
+venv는 `$VENV` > `.env`의 `VENV` > `/scratch2/$USER/venvs/<PROJECT_NAME>` 순서로 정한다(`common/env.sh`, `check_node_health.sh`, `resume.sh`).
+`.env`의 `${USER}`·`${PROJECT_NAME}` 같은 참조는 `env.sh`가 `PROJECT_NAME`, `CHECKPOINT_DIR`, `VENV` 세 키에 한해 확장해서 읽는다(파일 전체를 source하지 않는다).
 
 | Path | What |
 |---|---|
