@@ -22,9 +22,10 @@ def cfg_train_global() -> DictConfig:
         with open_dict(cfg):
             cfg.paths.root_dir = str(rootutils.find_root(indicator=".project-root"))
             cfg.trainer.max_epochs = 1
-            cfg.trainer.limit_train_batches = 0.01
-            cfg.trainer.limit_val_batches = 0.1
-            cfg.trainer.limit_test_batches = 0.1
+            # absolute batch counts (not fractions): a fraction rounds to 0 batches on small datasets
+            cfg.trainer.limit_train_batches = 2
+            cfg.trainer.limit_val_batches = 2
+            cfg.trainer.limit_test_batches = 2
             cfg.trainer.accelerator = "cpu"
             cfg.trainer.devices = 1
             cfg.data.num_workers = 0
@@ -49,7 +50,7 @@ def cfg_eval_global() -> DictConfig:
         with open_dict(cfg):
             cfg.paths.root_dir = str(rootutils.find_root(indicator=".project-root"))
             cfg.trainer.max_epochs = 1
-            cfg.trainer.limit_test_batches = 0.1
+            cfg.trainer.limit_test_batches = 2
             cfg.trainer.accelerator = "cpu"
             cfg.trainer.devices = 1
             cfg.data.num_workers = 0
@@ -78,6 +79,9 @@ def cfg_train(cfg_train_global: DictConfig, tmp_path: Path) -> DictConfig:
     with open_dict(cfg):
         cfg.paths.output_dir = str(tmp_path)
         cfg.paths.log_dir = str(tmp_path)
+        # exp_dir / ckpt_dir default to <log_dir>/runs/<experiment_name>[/checkpoints]; pin them for the tests
+        cfg.paths.exp_dir = str(tmp_path)
+        cfg.paths.ckpt_dir = str(tmp_path / "checkpoints")
 
     yield cfg
 
@@ -101,6 +105,9 @@ def cfg_eval(cfg_eval_global: DictConfig, tmp_path: Path) -> DictConfig:
     with open_dict(cfg):
         cfg.paths.output_dir = str(tmp_path)
         cfg.paths.log_dir = str(tmp_path)
+        # exp_dir / ckpt_dir default to <log_dir>/runs/<experiment_name>[/checkpoints]; pin them for the tests
+        cfg.paths.exp_dir = str(tmp_path)
+        cfg.paths.ckpt_dir = str(tmp_path / "checkpoints")
 
     yield cfg
 

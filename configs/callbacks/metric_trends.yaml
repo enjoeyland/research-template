@@ -1,0 +1,5 @@
+# val/<name>_best and val/overfit_gap curves derived from the monitored metric (see MetricTrends).
+metric_trends:
+  _target_: src.utils.callbacks.MetricTrends
+  monitor: ${model.metrics.monitor_metric}
+  mode: ${model.metrics.monitor_mode}

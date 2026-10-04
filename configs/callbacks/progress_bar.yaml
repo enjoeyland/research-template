@@ -1,0 +1,9 @@
+# https://lightning.ai/docs/pytorch/latest/api/lightning.pytorch.callbacks.TQDMProgressBar.html
+#
+# TQDMProgressBar, not RichProgressBar: RichProgressBar's live-updating
+# render doesn't flush plain readable lines to a redirected (non-tty) sbatch log -- when a sweep
+# got killed partway, the log showed nothing past the initial config dump, so the failure was
+# undiagnosable. TQDM writes periodic plain-text lines that survive redirection.
+
+progress_bar:
+  _target_: lightning.pytorch.callbacks.TQDMProgressBar

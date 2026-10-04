@@ -5,7 +5,10 @@
 # - conda allows for installing packages without requiring certain compilers or
 #   libraries to be available in the system, since it installs precompiled binaries
 
-name: myenv
+name: research-template  # set by `make rename NAME=...`
+
+# Cluster GPU work: prefer a venv under /scratch2/$USER/venvs/<project> (see requirements.txt header)
+# over conda; use this file only if you need conda.
 
 channels:
   - pytorch
@@ -28,15 +31,16 @@ dependencies:
   - torchmetrics=0.*
   - hydra-core=1.*
   - rich=13.*
-  - pre-commit=3.*
   - pytest=7.*
 
   # --------- loggers --------- #
-  # - wandb
-  # - neptune-client
-  # - mlflow
-  # - comet-ml
-  # - aim>=3.16.2 # no lower than 3.16.2, see https://github.com/aimhubio/aim/issues/2550
+  - wandb
+
+  # --------- analysis --------- #
+  - numpy
+  - pandas
+  - matplotlib
+  - scikit-learn
 
   - pip>=23
   - pip:

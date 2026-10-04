@@ -1,0 +1,19 @@
+# Placeholder model. Replace with your own LightningModule.
+defaults:
+  - /metrics@metrics: classification_task
+  - /losses@loss: ce
+
+_target_: src.models.toy_module.ToyModule
+
+optimizer:
+  _target_: torch.optim.Adam
+  _partial_: true
+  lr: 0.001
+
+n_features: 16
+n_classes: 3
+hidden_size: 32
+
+# `metrics` (from the defaults above) is a TaskMetrics; callbacks (checkpointing / early stopping) read
+# ${model.metrics.monitor_metric} / ${model.metrics.monitor_mode} -- keep a `metrics` node with those two keys
+# in every model config, pointing at a metric the module logs.

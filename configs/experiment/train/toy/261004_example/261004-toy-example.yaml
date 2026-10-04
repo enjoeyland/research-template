@@ -1,0 +1,21 @@
+# @package _global_
+
+# Example experiment config: one file = one experiment.
+# Path: configs/experiment/train/<model>/<YYMMDD_topic>/<YYMMDD-name>.yaml (see configs/experiment/README.md)
+# Write here: intent (what question), comparison (against what), run command.
+#
+#   python src/train.py experiment/train=toy/261004_example/261004-toy-example
+
+defaults:
+  - override /data: toy
+  - override /model: toy
+  - override /callbacks: default_resumable   # mid-run resume checkpoint (every 10 epochs), see model_checkpoint_resume.yaml
+
+experiment_name: 261004-toy-example   # = file stem -> logs/runs/261004-toy-example/
+tags: ["toy"]
+
+trainer:
+  max_epochs: 10
+
+model:
+  hidden_size: 64

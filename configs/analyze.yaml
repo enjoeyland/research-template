@@ -1,0 +1,26 @@
+# @package _global_
+
+# Post-hoc analysis (src/analyze.py). Shares `experiment/train` with train.py/eval.py so that
+# `experiment/train=<name>` resolves the same paths.ckpt_dir (= checkpoints of that experiment).
+
+defaults:
+  - _self_
+  - data: toy
+  - model: toy
+  - callbacks: null
+  - logger: null
+  - trainer: default
+  - paths: default
+  - extras: default
+  - hydra: default
+  - experiment/train: null
+  - optional local: default
+
+task_name: "analyze"
+experiment_name: ${paths.run_id}
+tags: ["dev"]
+seed: 0
+
+# seeds whose checkpoints (paths.ckpt_dir/seed<N>_*.ckpt, written by train.py) are analyzed
+seeds: [0]
+# analysis outputs go to ${paths.exp_dir}/analyze, next to train/ and checkpoints/ of the same experiment

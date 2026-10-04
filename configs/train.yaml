@@ -4,8 +4,8 @@
 # order of defaults determines the order in which configs override each other
 defaults:
   - _self_
-  - data: mnist
-  - model: mnist
+  - data: toy
+  - model: toy
   - callbacks: default
   - logger: null # set logger here or use command line (e.g. `python train.py logger=tensorboard`)
   - trainer: default
@@ -15,7 +15,9 @@ defaults:
 
   # experiment configs allow for version control of specific hyperparameters
   # e.g. best hyperparameters for given model and datamodule
-  - experiment: null
+  # (configs/experiment/train/<model>/<YYMMDD_topic>/<YYMMDD-name>.yaml -- one file per experiment, shared with
+  # eval.py and analyze.py; see configs/experiment/README.md)
+  - experiment/train: null
 
   # config for hyperparameter optimization
   - hparams_search: null
@@ -29,6 +31,12 @@ defaults:
 
 # task name, determines output directory path
 task_name: "train"
+
+# name of the experiment directory: logs/runs/<experiment_name>/ (train/ eval/ analyze/ checkpoints/).
+# defaults to a timestamp; override via experiment config or CLI (experiment_name=...).
+# Keep it equal to the experiment config stem for a clean runs/ listing.
+# Seeds are NOT separate folders -- they go into checkpoint filenames (seed${seed}_epoch_...).
+experiment_name: ${paths.run_id}
 
 # tags to help you identify your experiments
 # you can overwrite this in experiment configs
@@ -46,4 +54,5 @@ test: True
 ckpt_path: null
 
 # seed for random number generators in pytorch, numpy and python.random
-seed: null
+# also used in checkpoint / analyze artifact filenames (seed${seed}_...).
+seed: 0

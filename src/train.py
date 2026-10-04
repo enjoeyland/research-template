@@ -32,6 +32,7 @@ from src.utils import (
     get_metric_value,
     instantiate_callbacks,
     instantiate_loggers,
+    link_checkpoints_dir,
     log_hyperparameters,
     task_wrapper,
 )
@@ -51,8 +52,11 @@ def train(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     :return: A tuple with metrics and dict with all instantiated objects.
     """
     # set seed for random number generators in pytorch, numpy and python.random
-    if cfg.get("seed"):
+    # `is not None`: seed=0 is a valid seed (the default)
+    if cfg.get("seed") is not None:
         L.seed_everything(cfg.seed, workers=True)
+
+    link_checkpoints_dir(cfg)
 
     log.info(f"Instantiating datamodule <{cfg.data._target_}>")
     datamodule: LightningDataModule = hydra.utils.instantiate(cfg.data)
@@ -84,7 +88,15 @@ def train(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
 
     if cfg.get("train"):
         log.info("Starting training!")
-        trainer.fit(model=model, datamodule=datamodule, ckpt_path=cfg.get("ckpt_path"))
+        # weights_only=False: torch>=2.6 defaults torch.load to weights_only=True, which cannot read
+        # omegaconf containers in the saved hparams (resume fails with UnpicklingError). These are our
+        # own trusted checkpoints. Without ckpt_path this argument does nothing.
+        trainer.fit(
+            model=model,
+            datamodule=datamodule,
+            ckpt_path=cfg.get("ckpt_path"),
+            weights_only=False if cfg.get("ckpt_path") else None,
+        )
 
     train_metrics = trainer.callback_metrics
 
@@ -94,7 +106,7 @@ def train(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         if ckpt_path == "":
             log.warning("Best ckpt not found! Using current weights for testing...")
             ckpt_path = None
-        trainer.test(model=model, datamodule=datamodule, ckpt_path=ckpt_path)
+        trainer.test(model=model, datamodule=datamodule, ckpt_path=ckpt_path, weights_only=False)
         log.info(f"Best ckpt path: {ckpt_path}")
 
     test_metrics = trainer.callback_metrics

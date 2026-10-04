@@ -1,22 +1,29 @@
 defaults:
   - model_checkpoint
+  - model_checkpoint_last
   - early_stopping
   - model_summary
-  - rich_progress_bar
+  - metric_trends
+  - progress_bar
   - _self_
 
+# the monitored metric comes from the model config (`model.metrics.monitor_metric/monitor_mode`),
+# so swapping the model swaps what checkpointing / early stopping watch.
 model_checkpoint:
-  dirpath: ${paths.output_dir}/checkpoints
-  filename: "epoch_{epoch:03d}"
-  monitor: "val/acc"
-  mode: "max"
-  save_last: True
+  dirpath: ${paths.ckpt_dir}
+  filename: "seed${seed}_epoch_{epoch:03d}"
+  monitor: ${model.metrics.monitor_metric}
+  mode: ${model.metrics.monitor_mode}
+  # "last" lives in the separate model_checkpoint_last callback (see its header): Lightning's
+  # save_last=True stops firing once the monitored metric saturates.
+  save_last: False
   auto_insert_metric_name: False
 
 early_stopping:
-  monitor: "val/acc"
-  patience: 100
-  mode: "max"
+  monitor: ${model.metrics.monitor_metric}
+  # keep patience well below trainer.max_epochs (~30%), otherwise early stopping never fires.
+  patience: 15
+  mode: ${model.metrics.monitor_mode}
 
 model_summary:
   max_depth: -1

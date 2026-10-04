@@ -1,0 +1,19 @@
+# Mid-run checkpoint for resuming interrupted runs (opt-in via `callbacks=default_resumable`).
+#
+# One file `seed${seed}_resume.ckpt`, overwritten every `every_n_epochs` (no version suffix). If the job
+# dies, resubmit the SAME command: scripts/sbatch/common/resume.sh finds this file and passes it as
+# `ckpt_path` (optimizer / scheduler state included) together with the stored wandb run id.
+# monitor: null -> saved unconditionally, independent of any metric improving (see model_checkpoint_last.yaml).
+model_checkpoint_resume:
+  _target_: src.utils.callbacks.ResumeModelCheckpoint # own state_key: see its docstring (max_epochs == 10 collision)
+  dirpath: ${paths.ckpt_dir}
+  filename: "seed${seed}_resume"
+  monitor: null
+  save_last: False
+  save_top_k: 1
+  every_n_epochs: 10
+  save_on_train_epoch_end: True
+  verbose: False
+  auto_insert_metric_name: False
+  enable_version_counter: False # re-running the same name must overwrite, not write -v1
+  save_weights_only: False

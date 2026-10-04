@@ -1,0 +1,13 @@
+# Instantiated as TaskMetrics and injected into the LightningModule (`/metrics@metrics:` in a model config).
+# Callbacks read monitor_* via ${model.metrics.monitor_*}.
+# TaskMetrics also logs val/<monitor name>_best (e.g. val/acc_best) and val/overfit_gap
+# (positive = overfitting, regardless of monitor_mode).
+
+_target_: src.metrics.TaskMetrics
+
+monitor_metric: val/acc
+monitor_mode: max
+
+metric_groups:
+  - _target_: src.metrics.ClassificationMetricGroup
+    num_classes: ${model.n_classes}

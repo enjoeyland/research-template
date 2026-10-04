@@ -1,0 +1,8 @@
+# callbacks/default.yaml + mid-run resume checkpoint. Opt-in: every experiment would otherwise pay a
+# checkpoint write every 10 epochs. Pick it in the long runs only:
+#   defaults:
+#     - override /callbacks: default_resumable
+defaults:
+  - default
+  - model_checkpoint_resume
+  - _self_

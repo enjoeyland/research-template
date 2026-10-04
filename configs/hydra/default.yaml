@@ -5,15 +5,17 @@ defaults:
   - override hydra_logging: colorlog
   - override job_logging: colorlog
 
-# output directory, generated dynamically on each run
+# One folder per experiment (logs/runs/<exp>/), one sub folder per task (train / eval / analyze).
+# Seeds share this dir; checkpoint / analyze filenames carry seed${seed}_…
 run:
-  dir: ${paths.log_dir}/${task_name}/runs/${now:%Y-%m-%d}_${now:%H-%M-%S}
+  dir: ${paths.exp_dir}/${task_name}
 sweep:
-  dir: ${paths.log_dir}/${task_name}/multiruns/${now:%Y-%m-%d}_${now:%H-%M-%S}
+  dir: ${paths.log_dir}/multiruns/${now:%Y-%m-%d}_${now:%H-%M-%S}
   subdir: ${hydra.job.num}
 
 job_logging:
   handlers:
     file:
       # Incorporates fix from https://github.com/facebookresearch/hydra/pull/2242
-      filename: ${hydra.runtime.output_dir}/${task_name}.log
+      # Per-seed log file so concurrent seeds in the same experiment dir don't clobber each other.
+      filename: ${hydra.runtime.output_dir}/${task_name}_seed${seed}.log

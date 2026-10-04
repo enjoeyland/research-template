@@ -7,10 +7,12 @@ wandb:
   offline: False
   id: null # pass correct id to resume experiment!
   anonymous: null # enable anonymous logging
-  project: "lightning-hydra-template"
+  # project name: WANDB_PROJECT > PROJECT_NAME (both from .env) > the repo folder name; or override on the command
+  # line with `logger.wandb.project=<name>`
+  project: ${oc.env:WANDB_PROJECT,${oc.env:PROJECT_NAME,${basename:${paths.root_dir}}}}
   log_model: False # upload lightning ckpts
   prefix: "" # a string to put at the beginning of metric keys
-  # entity: "" # set to name of your wandb team
+  entity: ${oc.env:WANDB_ENTITY,null} # your wandb team / user; set WANDB_ENTITY in .env
   group: ""
   tags: []
   job_type: ""

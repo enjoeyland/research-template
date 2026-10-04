@@ -1,12 +1,64 @@
+import os
 import warnings
 from importlib.util import find_spec
+from pathlib import Path
 from typing import Any, Callable, Dict, Optional, Tuple
 
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
 
 from src.utils import pylogger, rich_utils
 
 log = pylogger.RankedLogger(__name__, rank_zero_only=True)
+
+# ${basename:<path>} in configs, e.g. the default wandb project = the repo folder name
+OmegaConf.register_new_resolver("basename", lambda path: Path(str(path)).name, replace=True)
+
+
+def link_checkpoints_dir(cfg: DictConfig) -> None:
+    """Symlink ``<exp_dir>/checkpoints`` -> ``<ckpt_dir>`` so the experiment folder ``logs/runs/<experiment>/``
+    shows its checkpoints next to ``train/``, ``eval/`` and ``analyze/``, even when ``CHECKPOINT_DIR`` redirects
+    them to long-term storage.
+
+    No-op if ``ckpt_dir`` already *is* ``<exp_dir>/checkpoints`` (the default when ``CHECKPOINT_DIR`` isn't
+    set) or if the link already exists.
+
+    Multiple seeds of one experiment share one ``exp_dir`` and may start concurrently, so the
+    exists-check and ``symlink_to()`` are not atomic as a pair; losing that race is not an error
+    (the link exists now, pointing at the same target), so ``FileExistsError`` is swallowed.
+
+    ``ckpt_dir`` itself is created here (``mkdir(parents=True, exist_ok=True)``). Without that, a
+    first-time ``experiment_name`` on a fresh shared path leaves ``link`` a *dangling* symlink, and
+    ``ModelCheckpoint``'s own ``os.makedirs(..., exist_ok=True)`` then fails with
+    ``FileExistsError`` (``isdir()`` follows the dangling link, sees False, and ``mkdir()`` collides
+    with the symlink).
+    """
+    exp_dir = Path(cfg.paths.exp_dir)
+    ckpt_dir = Path(cfg.paths.ckpt_dir)
+    link = exp_dir / "checkpoints"
+    if ckpt_dir != link:
+        ckpt_dir.mkdir(parents=True, exist_ok=True)
+    if ckpt_dir == link or link.is_symlink() or link.exists():
+        return
+    try:
+        link.symlink_to(ckpt_dir, target_is_directory=True)
+    except FileExistsError:
+        pass
+
+
+def require_data_path(path, hint: str = "") -> Path:
+    """Return ``path`` if it exists, else raise an error that names the fix.
+
+    Heavy datasets are symlinked into ``data/`` (see data/README.md); a missing or DANGLING link otherwise
+    surfaces deep inside a dataloader as an unrelated error.
+    """
+    path = Path(path)
+    if not path.exists():  # False for a dangling symlink too
+        kind = f"dangling symlink -> {os.readlink(path)}" if path.is_symlink() else "missing"
+        raise FileNotFoundError(
+            f"data path {path} is {kind}. Link the dataset: ln -sfn <real location> {path}"
+            + (f"  ({hint})" if hint else "")
+        )
+    return path
 
 
 def extras(cfg: DictConfig) -> None:

@@ -4,6 +4,7 @@
 root_dir: ${oc.env:PROJECT_ROOT}
 
 # path to data directory
+# datasets are always read from <repo>/data; heavy ones are symlinked into it (data/README.md)
 data_dir: ${paths.root_dir}/data/
 
 # path to logging directory
@@ -16,3 +17,19 @@ output_dir: ${hydra:runtime.output_dir}
 
 # path to working directory
 work_dir: ${hydra:runtime.cwd}
+
+# ONE folder per experiment holds everything about it: logs/runs/<experiment_name>/
+#   train/ eval/ analyze/   -- one hydra run dir per task (config, log file, csv metrics, plots)
+#   checkpoints/            -- the checkpoints (a symlink to $CHECKPOINT_DIR/... when that is set)
+exp_dir: ${paths.log_dir}/runs/${experiment_name}
+
+# timestamp; default value of top-level `experiment_name` (see configs/train.yaml)
+run_id: ${now:%Y-%m-%d}_${now:%H-%M-%S}
+
+# path to checkpoint directory
+# defaults under log_dir, but can be redirected to shared/large storage by setting
+# CHECKPOINT_DIR in .env (e.g. CHECKPOINT_DIR=/lustre/<user>/checkpoints/<project>)
+# One folder per experiment; seeds are distinguished in checkpoint / artifact filenames (seed${seed}_...),
+# not as subdirectories. It is the real directory unless CHECKPOINT_DIR is set, in which case
+# ${paths.exp_dir}/checkpoints becomes a symlink to it (src/utils.link_checkpoints_dir).
+ckpt_dir: ${oc.env:CHECKPOINT_DIR,${paths.log_dir}}/runs/${experiment_name}/checkpoints

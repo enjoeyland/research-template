@@ -1,0 +1,8 @@
+# RTX 4090 only (~24GB VRAM) — fastest of the 24GB pool
+PROFILE_NAME=gpu4090
+SLURM_PARTITION=suma_rtx4090
+SLURM_QOS=big_qos
+SLURM_GRES=gpu:1
+SLURM_TIME=24:00:00
+HYDRA_TRAINER=gpu
+SLURM_EXCLUDE=cs-gpu-01,node24,node05,node23
