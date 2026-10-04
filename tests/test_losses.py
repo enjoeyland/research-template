@@ -75,3 +75,13 @@ def test_field_term_reads_a_model_computed_scalar() -> None:
     assert float(loss(out, None)["loss"]) == pytest.approx(0.07)
     with pytest.raises(KeyError, match="requires \\['kl'\\]"):
         loss(ModelOutput(), None)
+
+
+def test_pass_blend_names_the_pass_and_field_when_a_pass_lacks_one() -> None:
+    from src.losses import FieldTerm, PassBlend
+
+    good = ModelOutput(extras={"kl": torch.tensor(1.0)})
+    bad = ModelOutput(extras={})
+    out = ModelOutput(extras={"passes": {"gt": good, "self": bad}})
+    with pytest.raises(KeyError, match="pass 'self'.*\\['kl'\\]"):
+        PassBlend(FieldTerm("kl"), {"gt": 0.5, "self": 0.5})(out, None)

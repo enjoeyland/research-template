@@ -1,7 +1,10 @@
 """Reusable MetricGroup implementations."""
 
+from typing import Sequence
+
 from src.metrics.classification import MulticlassAccuracy, MulticlassF1Score
 from src.metrics.metric_base import MetricGroup
+from src.metrics.scalar import FieldMean
 
 
 class ClassificationMetricGroup(MetricGroup):
@@ -39,3 +42,18 @@ class ClassificationMetricGroup(MetricGroup):
         for split_dict in (self.metrics_train, self.metrics_valid, self.metrics_test):
             split_dict[f"{self.name_prefix}acc"] = MulticlassAccuracy(num_classes=self.num_classes, **keys)
             split_dict[f"{self.name_prefix}macro_f1"] = MulticlassF1Score(num_classes=self.num_classes, **keys)
+
+
+class FieldMeanGroup(MetricGroup):
+    """Epoch means of scalar diagnostics the model puts into its output (``FieldMean`` per key), logged as
+    ``<split>/<name_prefix><key>``. Diagnostics belong here, not in the loss."""
+
+    def __init__(self, keys: Sequence[str], name_prefix: str = "diag/") -> None:
+        self.keys = list(keys)
+        self.name_prefix = name_prefix
+        super().__init__()
+
+    def init_metrics(self) -> None:
+        for split_dict in (self.metrics_train, self.metrics_valid, self.metrics_test):
+            for key in self.keys:
+                split_dict[f"{self.name_prefix}{key}"] = FieldMean(key)

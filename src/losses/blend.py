@@ -47,6 +47,12 @@ class PassBlend(LossTerm):
                 continue
             if name not in passes:
                 raise KeyError(f"PassBlend: weight given for pass '{name}' but the model output has passes {list(passes)}")
+            missing = [k for k in self.term.requires if get_field(passes[name], k) is None]
+            if missing:
+                raise KeyError(
+                    f"PassBlend: pass '{name}' of the model output lacks {missing}, which "
+                    f"{type(self.term).__name__} requires"
+                )
             value = w * self.term(passes[name], batch)
             total = value if total is None else total + value
         return total
