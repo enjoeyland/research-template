@@ -27,9 +27,6 @@
 
 | 문서 | 내용 |
 |---|---|
-| [261004_resume-checkpoint-state-key-collision.md](implementation/261004_resume-checkpoint-state-key-collision.md) | `default_resumable`이 `max_epochs=10`에서 시작하지 못하던 `state_key` 충돌 |
-| [261004_metric-trends-epoch-pairing.md](implementation/261004_metric-trends-epoch-pairing.md) | `val/overfit_gap`이 한 epoch 밀려 있던 문제, best/gap을 `MetricTrends` 콜백으로 이동 |
-| [261004_sbatch-template-runtime-fixes.md](implementation/261004_sbatch-template-runtime-fixes.md) | sbatch 안에서 도는지 검증하며 찾은 4건(.env 없음, spool 경로, 그룹 override, analyze 폴더) |
 
 ### experiments/
 

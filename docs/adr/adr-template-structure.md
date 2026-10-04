@@ -7,7 +7,7 @@
 새 연구 프로젝트를 만들 때마다 구조를 처음부터 다시 정하고, 이전 프로젝트에서 검증된 것(실행 폴더 규칙, SLURM 스윕, 재개, 규칙 문서)을
 손으로 복사해 왔다. 복사본은 곧 갈라졌다 (JointDLM은 Medical-CausalInference의 `scripts/sbatch/`를 일부만 복사했고, `CLAUDE.md`·`docs/`·`studies/`를
 다시 만들었다). 이 템플릿은 두 프로젝트에서 검증된 것을 한 곳에 모아, 새 프로젝트를 복사하자마자 같은 규칙으로 시작하게 한다.
-(ashleve/lightning-hydra-template를 fork. 배경과 진행 기록: `docs/261004-template-plan.md`.)
+(ashleve/lightning-hydra-template를 fork.)
 
 ## Decision
 
