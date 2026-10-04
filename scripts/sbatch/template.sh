@@ -39,7 +39,7 @@ fi
 : "${JOB_NAME:=my-sweep}"
 
 WANDB_GROUP="${JOB_NAME}"
-# config paths under configs/experiment/train/ (without .yaml): <topic>/<YYMMDD_round>/<YYMMDD-name>
+# config paths under configs/experiment/train/ (without .yaml): <model>/<YYMMDD_topic>/<YYMMDD-name>
 EXPERIMENTS=(toy/261004_example/261004-toy-example)
 # What's actually being swept is the CV fold -- seed is just set
 # equal to it (most data configs default data.fold: ${seed}, so seed="${fold}" alone is enough,

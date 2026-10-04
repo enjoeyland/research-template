@@ -15,7 +15,7 @@ defaults:
 
   # experiment configs allow for version control of specific hyperparameters
   # e.g. best hyperparameters for given model and datamodule
-  # (configs/experiment/train/<topic>/<YYMMDD_round>/<YYMMDD-name>.yaml -- one file per experiment, shared with
+  # (configs/experiment/train/<model>/<YYMMDD_topic>/<YYMMDD-name>.yaml -- one file per experiment, shared with
   # eval.py and analyze.py; see configs/experiment/README.md)
   - experiment/train: null
 

@@ -59,7 +59,7 @@ source scripts/sbatch/profiles/gpu24.sh
 srun --partition="$SLURM_PARTITION" --qos="$SLURM_QOS" --gres="$SLURM_GRES" \
   --exclude="$SLURM_EXCLUDE" --time=00:15:00 \
   "$VENV/bin/python" src/train.py \
-  experiment/train=<topic>/<YYMMDD_round>/<YYMMDD-name> \
+  experiment/train=<model>/<YYMMDD_topic>/<YYMMDD-name> \
   debug=smoke trainer=gpu logger=csv seed=42 data.fold=0
 
 # (2) 실제 5-fold 스윕 — 캐노니컬 스크립트 하나, JOB_NAME/CONFIG_DIR/EXPERIMENTS만 새 라운드로 덮어써서 실행

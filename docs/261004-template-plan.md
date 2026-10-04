@@ -68,7 +68,7 @@ research-template/
 │   ├── metrics/classification_task.yaml ★ toy 예제용
 │   ├── data/toy.yaml, model/toy.yaml  ★ §3 결정 시
 │   ├── debug/smoke.yaml               ★ JointDLM에서 이식·일반화: 소량 step + 결과를 logs/smoke/로 격리
-│   ├── experiment/train/<topic>/<YYMMDD_round>/<YYMMDD-name>.yaml  ★ 실험 1개 = 1파일 (README.md에 규칙)
+│   ├── experiment/train/<model>/<YYMMDD_topic>/<YYMMDD-name>.yaml  ★ 실험 1개 = 1파일 (README.md에 규칙)
 │   ├── experiment/compare/.gitkeep    ★
 │   └── (그 외 debug/extras/logger/trainer/local 은 유지)
 ├── src/
@@ -193,7 +193,7 @@ MNIST를 지우면 `tests/`의 train/eval/sweep smoke test와 `make train`이 �
 - `docs/TODO.md`, `docs/ideation/` 삭제 (ideation은 proposals와 중복).
 - `studies/` → `src/studies/` (일회성 검증도 `src` 아래 두어 import/rootutils 규칙을 `src/analysis/`와 통일). 로그는 계속 `logs/studies/`.
 - `configs/experiment/compare/` 이름 유지: `analysis`는 `src/analysis`(재사용 분석 코드)·`analyze.py`와 겹쳐 혼동되고, 이 그룹의 실제 역할은 "여러 실험을 묶어 비교"이므로 `compare`가 정확. `analyze.py`는 `experiment/train`을 공유.
-- `configs/experiment/train/` 계층: `<topic>/<YYMMDD_round>/<YYMMDD-name>.yaml` (MCCG 방식). 파일 이름 = `experiment_name`. 규칙은 `configs/experiment/README.md`.
+- `configs/experiment/train/` 계층: `<model>/<YYMMDD_topic>/<YYMMDD-name>.yaml` (MCCG 방식). 파일 이름 = `experiment_name`. 규칙은 `configs/experiment/README.md`.
 - CLAUDE.md의 smoke test를 `debug=smoke logger=csv`로 갱신 (`fast_dev_run`은 더 가벼운 대안으로 병기).
 - `docs/papers/` 추가: 논문 PDF 로컬 보관(`docs/papers/*` gitignore, `.gitkeep`만 추적).
 - `third_party/README.md`: repo마다 자기 venv(`/scratch2/$USER/venvs/<repo>`)를 만들어 쓰는 것을 기본 규칙으로 명시.
