@@ -8,7 +8,8 @@
 
 `YYMMDD-adr-주제.md` (예: `261004-adr-hydra-lightning-results-csv.md`)
 
-`docs/`의 다른 문서 파일명 규칙(날짜 접두사)과 통일했다.
+`docs/`의 다른 문서 파일명 규칙(날짜 접두사)과 통일했다. 단, 시간이 지나도 고쳐 가며 유지하는 기준 문서(예: `adr-template-structure.md`)는
+날짜 없이 `adr-주제.md`로 쓰고 문서 끝 "변경 이력"에 변경을 적는다.
 
 ## 템플릿
 
