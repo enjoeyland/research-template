@@ -40,9 +40,8 @@ mkdir -p "logs/slurm/$(date +%Y-%m-%d)"
 
 unset _ENV_DIR
 
-# Checkpoint path helpers (ported from isic-2024-2nd-place/shell/array_common.sh's
-# checkpoint_dir/wait_for_fold_ckpt pattern) -- one folder per experiment, seed<N>_epoch_*.ckpt
-# filenames (see configs/callbacks/default.yaml).
+# Checkpoint path helpers -- one folder per experiment, seed<N>_epoch_*.ckpt filenames
+# (see configs/callbacks/default.yaml).
 
 checkpoint_dir() {
   local experiment="${1:?}"

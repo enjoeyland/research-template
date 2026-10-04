@@ -1,4 +1,4 @@
-# Hyperparameter sweep helpers (ImgEdit-style mixed-radix run_id decoding).
+# Hyperparameter sweep helpers (mixed-radix run_id decoding).
 #
 # Define axes in the run script, set DIM_ORDER (first = innermost / changes fastest),
 # then map run_id -> indices:
@@ -66,11 +66,9 @@ run_ids_this_task() {
   done
 }
 
-# Per-group array-task-id ranges for one DIM_ORDER dimension (2026-09-08, added so a run
-# script's login-node submit can give each group its OWN analyze job with a
-# --dependency=afterok:<train_job>_<i>:<train_job>_<i+1>:... on just ITS array task ids,
-# instead of one analyze job waiting on the WHOLE train array -- see maybe_submit.sh's
-# ANALYZE_GROUPS handling).
+# Per-group array-task-id ranges for one DIM_ORDER dimension: lets a run script's login-node submit give each group its
+# OWN analyze job with a --dependency=afterok:<train_job>_<i>:<train_job>_<i+1>:... on just ITS array task ids, instead
+# of one analyze job waiting on the WHOLE train array (see maybe_submit.sh's ANALYZE_GROUPS handling).
 #
 # `dim` MUST be the OUTERMOST (last) entry in DIM_ORDER: decode_run_id's mixed-radix scheme
 # only gives an outermost dimension's values contiguous run_id blocks -- any inner dimension's

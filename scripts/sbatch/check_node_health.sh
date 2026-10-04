@@ -1,12 +1,9 @@
 #!/bin/bash
-# GPU node health check -- verifies whether specific nodes can actually initialize CUDA right now,
-# independent of any particular training job. Built 2026-09-07 against gpu24.sh's SLURM_EXCLUDE
-# list (grown to 7 nodes via a "fails once/twice -> excluded permanently, never re-checked" policy,
-# see that file's own comments for each exclusion's evidence) -- this script lets a node be
-# re-checked instead of staying excluded forever once a transient/since-fixed issue clears, rather
-# than relying on the next unlucky sweep to rediscover whether it's still bad. Generalized
-# 2026-09-08 to take PROFILE instead of hardcoding gpu24, so the same script works for any
-# profiles/*.sh with a SLURM_EXCLUDE list (gpu4090.sh, gpu24-cuda118.sh, ...).
+# GPU node health check -- verifies whether specific nodes can actually initialize CUDA right now, independent of any
+# particular training job. The SLURM_EXCLUDE lists in profiles/*.sh would otherwise exclude a node forever after it
+# failed; this script lets a node be re-checked so a transient / since-fixed issue can clear, instead of relying on the
+# next unlucky sweep to rediscover whether it is still bad. PROFILE selects whose SLURM_EXCLUDE list is checked
+# (gpu24.sh by default; gpu4090.sh, gpu24-cuda118.sh, ... work too).
 #
 # For each node given (or, with no args, every node in ${PROFILE}.sh's SLURM_EXCLUDE):
 #   1. `sinfo` its current SLURM state (idle/down/drained/allocated) -- DOWN/DRAIN is reported
@@ -98,11 +95,10 @@ print('CUDA_OK', torch.cuda.get_device_name(0))
   rc=$?
   echo "${out}" | sed 's/^/  /'
   if grep -q "has been revoked" <<< "${out}"; then
-    # 2026-09-07 (node05/08/12 all hit this): a PLAIN queue timeout would show the job still
-    # PENDING when `timeout` kills it. "allocation ... revoked" means SLURM DID allocate the node,
-    # then pulled it back BEFORE the job ran -- that's SLURM's own prolog/health-check (nhc)
-    # rejecting the node, a stronger "still unhealthy" signal than "just busy right now", not a
-    # mere INCONCLUSIVE-timeout.
+    # A PLAIN queue timeout would show the job still PENDING when `timeout` kills it. "allocation ... revoked" means
+    # SLURM DID allocate the node and then pulled it back BEFORE the job ran (its own prolog / health check rejecting
+    # the node) -- a hint the node may be unhealthy. It can also be a speculative allocation taken back on a saturated
+    # cluster, so do not exclude a node on this alone.
     RESULT["${node}"]="REVOKED (SLURM's own health check pulled the allocation back -- likely still unhealthy, not just busy)"
   elif [[ ${rc} -eq 124 ]]; then
     RESULT["${node}"]="INCONCLUSIVE (queued the whole time, timed out -- node likely just busy with another job, not proven bad)"

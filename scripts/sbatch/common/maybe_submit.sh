@@ -14,10 +14,8 @@
 #     THAT experiment's seeds finish, without waiting on every other experiment in the sweep.
 #     Each analyze job gets ANALYZE_GROUP_LABEL=<label> exported (via --export=ALL, same as
 #     every other var already exported in the submitting shell) -- the run script's own
-#     run_analyze() is responsible for reading it and restricting itself to that group (see
-#     synthetic_mask_recon_train.sh's run_analyze() for the pattern). 2026-09-08, added for a
-#     5-experiment scm_cascade round where the old "wait for all 25 runs" dependency meant no
-#     analysis could start until the slowest of 5 unrelated experiments finished.
+#     run_analyze() is responsible for reading it and restricting itself to that group. Without this, no analysis could
+#     start until the slowest of several unrelated experiments in one sweep had finished.
 #   - Otherwise → load profiles/<PROFILE>.sh and sbatch the top-level run script, then exit
 #
 # Overrides (env): PROFILE, ARRAY, JOB_NAME, TIME, OUTPUT, JOBS_PER_GPU, SLURM_EXCLUDE,
@@ -89,8 +87,8 @@ _build_sbatch_args() {
   if [[ -n "${SLURM_GRES:-}" ]]; then
     _sbatch_args+=(--gres="${SLURM_GRES}")
   fi
-  # SLURM_EXCLUDE_EXTRA (2026-09-20): 프로필의 exclude 목록에 **이번 제출에만** 노드를 더한다. 프로필은 모든
-  # 세션이 공유하므로, 한 번의 실패로 거기 노드를 넣는 대신 라운드 스크립트에서 이 변수로 임시 제외한다
+  # SLURM_EXCLUDE_EXTRA: 프로필의 exclude 목록에 **이번 제출에만** 노드를 더한다. 프로필은 모든
+  # 세션이 공유하므로, 한 번의 실패로 거기 노드를 넣는 대신 스윕 스크립트에서 이 변수로 임시 제외한다
   # (프로필이 SLURM_EXCLUDE 를 무조건 덮어써서 SLURM_EXCLUDE 를 env 로 주는 방식은 안 먹는다). 기본은 꺼짐.
   local _excl="${SLURM_EXCLUDE:-}"
   if [[ -n "${SLURM_EXCLUDE_EXTRA:-}" ]]; then

@@ -1,29 +1,20 @@
 # https://lightning.ai/docs/pytorch/stable/api/lightning.pytorch.callbacks.ModelCheckpoint.html
 #
-# 2026-09-10: SEPARATE callback for "the truly final-epoch checkpoint" -- factored out of
-# model_checkpoint.yaml's save_last=True after discovering it silently never fired past the first
-# epoch a saturating metric hit its ceiling. Root cause (installed lightning==2.6.5 source,
-# ModelCheckpoint.on_train_epoch_end): "last" is only saved when a top-k ("best") checkpoint was
-# ALSO saved in that SAME step (`self._last_global_step_saved == trainer.global_step`) -- and
-# `_last_global_step_saved` is only ever set inside `_save_checkpoint`, which `_save_topk_checkpoint`
-# only calls when the monitored metric STRICTLY improves. Every synthetic-dataset experiment in
-# this project hits val/macro_f1=1.0 within 1-2 epochs and never improves again (deterministic
-# concept->task rules), so "best" stops saving after that first ceiling hit -- and "last" was
-# silently frozen right alongside it, for the remaining ~28 of every 30-epoch run (confirmed
-# empirically: 260909-colormnist-ood-scm-cascade's seed0-4 _last.ckpt all had epoch=0,
-# global_step=422 despite training logs showing a full, successful 30-epoch run). save_top_k=0 on
-# the OTHER callback does NOT fix this -- it makes `_save_topk_checkpoint` return immediately,
-# so `_last_global_step_saved` never gets set AT ALL, meaning zero checkpoints save, ever (worse).
+# SEPARATE callback for "the truly final-epoch checkpoint" -- factored out of model_checkpoint.yaml's save_last=True
+# because that silently stops firing once the monitored metric saturates. Root cause (lightning==2.6.5 source,
+# ModelCheckpoint.on_train_epoch_end): "last" is only saved when a top-k ("best") checkpoint was ALSO saved in that SAME
+# step (`self._last_global_step_saved == trainer.global_step`), and `_last_global_step_saved` is only set inside
+# `_save_checkpoint`, which `_save_topk_checkpoint` only calls when the monitored metric STRICTLY improves. A metric that
+# reaches its ceiling early (e.g. val accuracy 1.0 on an easy task) never improves again, so "best" stops saving -- and
+# "last" is frozen right alongside it for the rest of the run (symptom: every seed's *_last.ckpt has epoch=0 although the
+# training log shows a full run). save_top_k=0 on the OTHER callback does NOT fix this -- it makes `_save_topk_checkpoint`
+# return immediately, so `_last_global_step_saved` never gets set and nothing saves at all.
 #
-# monitor: null sidesteps the whole coupling: `_save_none_monitor_checkpoint` has no improvement
-# check, it saves unconditionally whenever `_save_topk_checkpoint` runs. every_n_epochs is set to
-# the experiment's own max_epochs (${trainer.max_epochs}) so this fires exactly ONCE, at the
-# final epoch -- not every epoch, which would re-write a ~400MB checkpoint 30 times per run for
-# no benefit. Caveat: this assumes training reaches max_epochs uninterrupted -- if
-# callbacks.early_stopping is ever enabled for an experiment using this pattern, training could
-# stop before this fires and no "last" checkpoint would exist at all (every synthetic_mask_recon
-# experiment sets early_stopping: null today, so this doesn't currently apply, but keep it in
-# mind before enabling early stopping alongside this callback).
+# monitor: null sidesteps the coupling: `_save_none_monitor_checkpoint` has no improvement check, it saves
+# unconditionally whenever `_save_topk_checkpoint` runs. every_n_epochs is set to ${trainer.max_epochs} so this fires
+# exactly ONCE, at the final epoch, instead of re-writing a large checkpoint every epoch. Caveat: this assumes training
+# reaches max_epochs -- with callbacks.early_stopping enabled, training can stop before this fires and no "last"
+# checkpoint exists at all. Keep that in mind before enabling early stopping alongside it.
 model_checkpoint_last:
   _target_: lightning.pytorch.callbacks.ModelCheckpoint
   dirpath: ${paths.ckpt_dir}
@@ -34,18 +25,11 @@ model_checkpoint_last:
   every_n_epochs: ${trainer.max_epochs}
   verbose: False
   auto_insert_metric_name: False
-  # enable_version_counter: False (2026-09-11, found the hard way): without this, Lightning's
-  # ModelCheckpoint refuses to overwrite an existing file at the same path -- it silently appends
-  # "-v1", "-v2", ... instead. Re-running the SAME experiment_name (e.g. after a config/code fix,
-  # exactly the pattern this whole callback exists to support) left the OLD seed{N}_last.ckpt in
-  # place, so the NEW checkpoint landed at seed{N}_last-v1.ckpt while every analyze script (which
-  # only ever looks for the exact seed{N}_last.ckpt name) kept silently re-analyzing the stale
-  # pre-fix checkpoint -- confirmed empirically: an entire round of gated_pairs + h-detach fix
-  # re-training produced "-v1" files across all 7 experiments, and every reported result in that
-  # round (except the ones under brand-new experiment_names) was actually measuring the OLD model.
-  # This DOES mean re-running a seed now overwrites its previous checkpoint with no versioned
-  # backup -- acceptable here (these are cheap-to-regenerate synthetic experiments, not the only
-  # copy of anything valuable), and correct behavior for what "seed{N}_last.ckpt should mean" was
-  # always supposed to be.
+  # enable_version_counter: False: without it, Lightning's ModelCheckpoint refuses to overwrite an existing file at the
+  # same path -- it silently appends "-v1", "-v2", ... instead. Re-running the SAME experiment_name (e.g. after a
+  # config/code fix) left the OLD seed{N}_last.ckpt in place and wrote the new checkpoint to seed{N}_last-v1.ckpt, while
+  # every analysis that looks for the exact seed{N}_last.ckpt name kept silently using the stale checkpoint -- so results
+  # that looked like the new model were measuring the old one. The price: re-running a seed overwrites its previous
+  # checkpoint with no versioned backup, which is the behavior "seed{N}_last.ckpt" is supposed to have.
   enable_version_counter: False
   save_weights_only: False
