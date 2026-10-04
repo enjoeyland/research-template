@@ -2,17 +2,26 @@
 
 defaults:
   - _self_
-  - data: mnist # choose datamodule with `test_dataloader()` for evaluation
-  - model: mnist
+  - data: toy # choose datamodule with `test_dataloader()` for evaluation
+  - model: toy
   - logger: null
   - trainer: default
   - paths: default
   - extras: default
   - hydra: default
 
+  # same group as train.yaml: experiment configs are shared between train.py and eval.py
+  - experiment/train: null
+
 task_name: "eval"
+
+# name of the run directory (see configs/train.yaml)
+experiment_name: ${paths.run_id}
 
 tags: ["dev"]
 
 # passing checkpoint path is necessary for evaluation
 ckpt_path: ???
+
+# experiment configs use seed-dependent names (e.g. seed${seed}_last), so eval needs the key too
+seed: 0

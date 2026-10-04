@@ -4,7 +4,7 @@
 root_dir: ${oc.env:PROJECT_ROOT}
 
 # path to data directory
-data_dir: ${paths.root_dir}/data/
+data_dir: ${oc.env:DATA_DIR,${paths.root_dir}/data/}
 
 # path to logging directory
 log_dir: ${paths.root_dir}/logs/
@@ -16,3 +16,13 @@ output_dir: ${hydra:runtime.output_dir}
 
 # path to working directory
 work_dir: ${hydra:runtime.cwd}
+
+# timestamp; default value of top-level `experiment_name` (see configs/train.yaml)
+run_id: ${now:%Y-%m-%d}_${now:%H-%M-%S}
+
+# path to checkpoint directory
+# defaults under log_dir, but can be redirected to shared/large storage by setting
+# CHECKPOINT_DIR in .env (e.g. CHECKPOINT_DIR=/lustre/<user>/checkpoints/<project>)
+# One folder per experiment ; seeds are distinguished in
+# checkpoint / artifact filenames (seed${seed}_...), not as subdirectories.
+ckpt_dir: ${oc.env:CHECKPOINT_DIR,${paths.log_dir}}/${task_name}/runs/${experiment_name}/checkpoints

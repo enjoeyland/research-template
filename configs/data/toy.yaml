@@ -1,0 +1,10 @@
+# Synthetic placeholder dataset (no download). Replace with your own datamodule.
+_target_: src.data.toy_datamodule.ToyDataModule
+n_samples: 2000
+n_features: 16
+n_classes: 3
+train_val_test_split: [0.7, 0.15, 0.15]
+batch_size: 64
+num_workers: 0
+pin_memory: False
+fold: ${seed} # split selector (the sweep axis); equal to the seed by default

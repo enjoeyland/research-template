@@ -140,9 +140,15 @@ dmypy.json
 
 # Lightning-Hydra-Template
 configs/local/default.yaml
-/data/
+/data/*
+!/data/.gitkeep
 /logs/
 .env
 
-# Aim logging
-.aim
+# external code lives in third_party/ as git submodules (tracked via .gitmodules)
+# checkpoints redirected by CHECKPOINT_DIR may be symlinked at the repo root
+checkpoints
+
+# papers (PDFs stay local; folder kept via .gitkeep)
+docs/papers/*
+!docs/papers/.gitkeep

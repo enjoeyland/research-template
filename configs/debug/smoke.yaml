@@ -1,0 +1,25 @@
+# @package _global_
+
+# smoke test: a few steps, results isolated under logs/smoke/ (not mixed into real runs).
+# Unlike debug=default this keeps callbacks (checkpoints are written) and does NOT force the cpu,
+# so it can run on a GPU allocation (see CLAUDE.md §1: run through srun/sbatch).
+#   python src/train.py debug=smoke experiment/train=<name> logger=csv trainer=gpu
+
+task_name: "smoke"
+tags: ["debug"]
+experiment_name: smoke
+
+extras:
+  enforce_tags: False
+
+trainer:
+  max_epochs: 1
+  limit_train_batches: 20
+  limit_val_batches: 5
+  limit_test_batches: 5
+
+callbacks:
+  early_stopping: null
+
+paths:
+  ckpt_dir: ${paths.log_dir}/smoke/ckpt

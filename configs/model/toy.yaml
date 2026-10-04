@@ -1,0 +1,17 @@
+# Placeholder model. Replace with your own LightningModule.
+_target_: src.models.toy_module.ToyModule
+
+optimizer:
+  _target_: torch.optim.Adam
+  _partial_: true
+  lr: 0.001
+
+n_features: 16
+n_classes: 3
+hidden_size: 32
+
+# read by configs/callbacks/default.yaml (checkpointing / early stopping) -- keep these two keys
+# in every model config, pointing at a metric the module logs.
+metrics:
+  monitor_metric: val/acc
+  monitor_mode: max

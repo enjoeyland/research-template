@@ -25,6 +25,10 @@
   `scripts/sbatch/profiles/*.sh`(`gpu24`/`gpu4090`/`gpu48`/`gpu96`)로 `srun`/`sbatch`. 할당받았다고 실제로
   GPU 쓰는지 확신하지 말 것 — `torch.cuda.is_available()`/`list_physical_devices`류로 확인.
   GPU가 필요 없는 일반 스크립트(데이터 생성, 분석 등)는 `cpu.sh` 프로필로 제출한다.
+- **스모크테스트 = `debug=smoke logger=csv`** (`configs/debug/smoke.yaml`): 1 epoch, train 20 / val·test 5 batch만
+  돌고, early stopping을 끄고, 체크포인트·결과를 `logs/smoke/`로 격리해서 실제 실험 폴더(`logs/train/runs/`)를
+  오염시키지 않는다. 체크포인트 저장→로드→test 경로까지 실제로 지나간다. 더 가벼운 확인(1 batch, 체크포인트 저장
+  안 함)이 필요하면 `+trainer.fast_dev_run=true`. 둘 다 GPU 할당에서(`trainer=gpu`) 돌릴 것.
 - **wandb**: 스모크테스트/디버깅/버그재현이면 `logger=csv`. 사용자가 명시적으로 실제 실험을
   요청했을 때만(`sbatch` 제출 등) `logger=wandb`.
 - **데이터 분할**: 새 스윕은 저장소에 고정된 공유 split 파일 기준으로 돌린다(예: `split/<dataset>/..._5fold_seed42.csv`).
@@ -46,19 +50,19 @@
 **실행 예제:**
 
 ```bash
-# (1) 스모크테스트 — GPU 할당 + fast_dev_run + wandb 끔
+# (1) 스모크테스트 — GPU 할당 + debug=smoke + wandb 끔
 source scripts/sbatch/profiles/gpu24.sh
 srun --partition="$SLURM_PARTITION" --qos="$SLURM_QOS" --gres="$SLURM_GRES" \
   --exclude="$SLURM_EXCLUDE" --time=00:15:00 \
   "$VENV/bin/python" src/train.py \
-  experiment/train=<날짜>_<라운드>/<config-name> \
-  trainer=gpu +trainer.fast_dev_run=true logger=csv seed=42 data.fold=0
+  experiment/train=<topic>/<YYMMDD_round>/<YYMMDD-name> \
+  debug=smoke trainer=gpu logger=csv seed=42 data.fold=0
 
 # (2) 실제 5-fold 스윕 — 캐노니컬 스크립트 하나, JOB_NAME/CONFIG_DIR/EXPERIMENTS만 새 라운드로 덮어써서 실행
 ./scripts/<model>_train.sh
 ```
 
-## 2. 파일 위치: `scripts/`는 shell 전용, 분석/검증 코드는 `src/analysis/`·`studies/`, 로그는 `logs/`
+## 2. 파일 위치: `scripts/`는 shell 전용, 분석/검증 코드는 `src/analysis/`·`src/studies/`, 로그는 `logs/`
 
 - `scripts/*.sh` — sbatch 스윕 실행기만 있는 폴더(전부 `.sh`). 여기에 `.py` 파일 만들지 말 것.
 - fold-pooling/OOF metric 계산 같은 사후 분석 Python 스크립트는 `src/analysis/`에 만들 것. 새 분석 스크립트가
@@ -69,10 +73,10 @@ srun --partition="$SLURM_PARTITION" --qos="$SLURM_QOS" --gres="$SLURM_GRES" \
   라운드 종류를 분기해서 넣을 것.** 새 실험 축을 추가하면 그 라운드에 맞는 후속 조치를 `run_analyze()`
   안에 조건 분기로 추가할 것 — 기존 analyze가 안 맞으면 그냥 두지 말고 라운드에 맞는 걸로 바꿀 것.
 - **실험 검증 코드는 재사용 가능하면 `src/analysis/<YYMMDD_topic>/`, 일회성이면
-  `studies/<YYMMDD_topic>/`에 둔다**(§5.4 "결과 기록" 단계에서 나오는 코드가 여기 해당).
-- **스모크테스트/실행 로그 원본(`*.log`)은 `studies/<YYMMDD_topic>/`에 같이 두지 말고
+  `src/studies/<YYMMDD_topic>/`에 둔다**(§5.4 "결과 기록" 단계에서 나오는 코드가 여기 해당).
+- **스모크테스트/실행 로그 원본(`*.log`)은 `src/studies/<YYMMDD_topic>/`에 같이 두지 말고
   `logs/studies/<YYMMDD_topic>/`에 저장할 것** — `logs/`는 `.gitignore` 대상이라 소스 코드와 같은 디렉토리에
-  두면 로그만 영구 미추적 상태로 섞여 있게 된다. `studies/` 쪽 README/스크립트 주석에서 로그를 언급할 때는
+  두면 로그만 영구 미추적 상태로 섞여 있게 된다. `src/studies/` 쪽 README/스크립트 주석에서 로그를 언급할 때는
   실제 위치(`logs/studies/...`)를 명시할 것.
 - 문서는 용도별로 나눈다: 제안/설계/예상은 `docs/proposals/`, 실행 기록/결과/해석은 `docs/experiments/`,
   결정 기록은 `docs/adr/`. 파일명은 `YYMMDD_주제.md`. **`proposals/`에는 실험 결과(실측 수치, 예상과의 비교)를

@@ -16,6 +16,9 @@ clean-logs: ## Clean logs
 format: ## Run pre-commit hooks
 	pre-commit run -a
 
+install: ## Install Python deps into the active env
+	pip install -r requirements.txt
+
 sync: ## Merge changes from main branch to your current branch
 	git pull
 	git pull origin main
@@ -26,5 +29,8 @@ test: ## Run not slow tests
 test-full: ## Run all tests
 	pytest
 
-train: ## Train the model
+train: ## Train with default config
 	python src/train.py
+
+analyze: ## Post-hoc analysis (src/analyze.py)
+	python src/analyze.py

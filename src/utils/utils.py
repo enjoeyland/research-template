@@ -1,5 +1,6 @@
 import warnings
 from importlib.util import find_spec
+from pathlib import Path
 from typing import Any, Callable, Dict, Optional, Tuple
 
 from omegaconf import DictConfig
@@ -7,6 +8,36 @@ from omegaconf import DictConfig
 from src.utils import pylogger, rich_utils
 
 log = pylogger.RankedLogger(__name__, rank_zero_only=True)
+
+
+def link_checkpoints_dir(cfg: DictConfig) -> None:
+    """Symlink ``<output_dir>/checkpoints`` -> ``<ckpt_dir>`` so a run's local log folder shows its
+    checkpoints too, even when ``CHECKPOINT_DIR`` redirects them to shared/large storage.
+
+    No-op if ``ckpt_dir`` already *is* ``<output_dir>/checkpoints`` (the default when
+    ``CHECKPOINT_DIR`` isn't set) or if the link already exists.
+
+    Multiple seeds of one experiment share one ``output_dir`` and may start concurrently, so the
+    exists-check and ``symlink_to()`` are not atomic as a pair; losing that race is not an error
+    (the link exists now, pointing at the same target), so ``FileExistsError`` is swallowed.
+
+    ``ckpt_dir`` itself is created here (``mkdir(parents=True, exist_ok=True)``). Without that, a
+    first-time ``experiment_name`` on a fresh shared path leaves ``link`` a *dangling* symlink, and
+    ``ModelCheckpoint``'s own ``os.makedirs(..., exist_ok=True)`` then fails with
+    ``FileExistsError`` (``isdir()`` follows the dangling link, sees False, and ``mkdir()`` collides
+    with the symlink).
+    """
+    output_dir = Path(cfg.paths.output_dir)
+    ckpt_dir = Path(cfg.paths.ckpt_dir)
+    link = output_dir / "checkpoints"
+    if ckpt_dir != link:
+        ckpt_dir.mkdir(parents=True, exist_ok=True)
+    if ckpt_dir == link or link.is_symlink() or link.exists():
+        return
+    try:
+        link.symlink_to(ckpt_dir, target_is_directory=True)
+    except FileExistsError:
+        pass
 
 
 def extras(cfg: DictConfig) -> None:
