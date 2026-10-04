@@ -91,14 +91,6 @@ srun --partition="$SLURM_PARTITION" --qos="$SLURM_QOS" --gres="$SLURM_GRES" \
 - 문서는 용도별로 나눈다: 제안/설계/예상은 `docs/proposals/`, 실행 기록/결과/해석은 `docs/experiments/`,
   결정 기록은 `docs/adr/`. 파일명은 `YYMMDD_주제.md`. **`proposals/`에는 실험 결과(실측 수치, 예상과의 비교)를
   쓰지 않고 `experiments/`에만 쓴다.**
-- **저장 위치 구분**: `/lustre/<user>/` = 장기 보관(체크포인트 `CHECKPOINT_DIR`, 남길 결과), `/scratch2/<user>/` = 지워져도 되는
-  것(cache, tmp, venvs). 사전학습 모델/다운로드 데이터셋 캐시(HF, timm 등)는 `~/.cache`가 아니라 `/scratch2/<user>/cache`로 간다 —
-  `.env`(`.env.example` 참고)의 `HUGGINGFACE_HUB_CACHE`, `TMPDIR`로 정한다. 임시 스크립트에서 모델을 받을 때는
-  `set -a; source .env; set +a`를 torch/transformers import 전에 할 것.
-- **무거운 데이터셋은 `data/`에 심볼릭 링크**로 둔다(`ln -sfn <실제 위치> data/<dataset>`). `data/`는 gitignore(링크는
-  커밋되지 않는다)이고, datamodule은 `${paths.data_dir}/<dataset>`를 `require_data_path()`로 열어 링크가 없거나 끊어졌으면
-  해결 방법이 적힌 오류를 낸다. 데이터를 repo 안에 복사하지 말 것. 자세한 규칙은 `data/README.md`.
-- 외부 코드는 `third_party/`의 git submodule로 둔다. 원본을 직접 수정하지 말 것.
 
 ## 3. ADR (Architecture Decision Record) 작성
 

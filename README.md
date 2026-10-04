@@ -38,6 +38,18 @@ fork해서, 실제 연구 프로젝트(Medical-CausalInference, JointDLM)에서 
 `checkpoints/seed<N>_epoch_XXX.ckpt` (`.env`의 `CHECKPOINT_DIR`이 있으면
 그쪽). 한 실험 = 폴더 하나, seed는 파일명에 들어간다.
 
+## 저장 위치
+
+| 위치 | 용도 |
+|---|---|
+| `/lustre/<user>/` | **장기 보관**: 체크포인트(`.env`의 `CHECKPOINT_DIR`), 남길 결과 |
+| `/scratch2/<user>/` | **지워져도 되는 것**: cache, tmp, venvs |
+| `<repo>/data/` | 무거운 데이터셋의 **심볼릭 링크** ([규칙](data/README.md)) |
+| `<repo>/third_party/` | 외부 코드(git submodule, 원본 수정 금지, [규칙](third_party/README.md)) |
+
+사전학습 모델/다운로드 데이터셋 캐시(HF, timm 등)는 `~/.cache`가 아니라 `/scratch2/<user>/cache`로 간다: `.env`(`.env.example` 참고)의
+`HUGGINGFACE_HUB_CACHE`, `TMPDIR`로 정한다. 직접 만든 스크립트에서 모델을 받을 때는 torch/transformers import 전에 `set -a; source .env; set +a`를 한다.
+
 ## 실행
 
 GPU 클러스터에서는 로그인 노드에서 직접 돌리지 말고 `srun`/`sbatch`로 실행한다 (CLAUDE.md §1).
