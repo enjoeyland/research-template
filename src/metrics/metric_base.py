@@ -2,7 +2,7 @@
 
 Usage in a LightningModule (see src/models/toy_module.py for plain torchmetrics, tests/test_metrics.py for this API):
   * ``on_step(split, ...)`` returns the metric OBJECTS -> pass them to ``self.log_dict(..., on_epoch=True)``;
-    Lightning then computes and resets them at each epoch boundary (never call ``.reset()`` by hand, CLAUDE.md §3),
+    Lightning then computes and resets them at each epoch boundary (never call ``.reset()`` by hand, src/metrics/README.md),
   * ``self.metrics.on_epoch_end(split)`` returns the epoch values.
   * ``val/<name>_best`` and ``val/overfit_gap`` curves come from the ``MetricTrends`` callback (src/utils/callbacks.py).
 """

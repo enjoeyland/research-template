@@ -1,6 +1,6 @@
 """Small MLP classifier -- a placeholder showing the LightningModule conventions of this repo.
 
-Conventions worth keeping in your own modules (details: CLAUDE.md §3):
+Conventions worth keeping in your own modules (details: src/models/README.md):
   * ``forward`` returns ONE ``ModelOutput`` per step; the loss and the metrics both read it, so nothing is
     computed twice. Put only what the model alone can produce into it (logits, sampled masks, features);
     softmax-style preprocessing belongs to the loss / metric,

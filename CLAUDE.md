@@ -2,7 +2,7 @@
 
 이 파일은 AI 어시스턴트가 이 저장소에서 작업할 때 지킬 규칙과, 실제로 두 번 이상 반복된 실수(gotchas)를
 함께 담는다. 코드를 "고치기" 전에, 그리고 뭔가 직접 실행하기 전에 읽을 것. 같은 실수를 또 하면 이 파일에
-추가한다 (§8).
+추가한다 (§7).
 
 ## 0. 요청이 불확실하거나 미정인 부분이 있을 때
 
@@ -33,7 +33,7 @@
   요청했을 때만(`sbatch` 제출 등) `logger=wandb`.
 - **데이터 분할**: 새 스윕은 저장소에 고정된 공유 split 파일 기준으로 돌린다(예: `split/<dataset>/..._5fold_seed42.csv`).
   즉석 KFold/예전 split 데이터모듈로 새 실행을 시작하지 말 것(예전 로그 보존용). 어떤 split이 기준인지는
-  이 파일 아래 "프로젝트별 메모"(§9)에 적는다.
+  이 파일 아래 "프로젝트별 메모"(§8)에 적는다.
 - **스윕 스크립트 컨벤션**: 같은 `configs/model/*.yaml` → 같은 `.sh` 하나만. 새 라운드로 넘어가면 그 스크립트의
   `CONFIG_DIR`/`EXPERIMENTS`를 덮어쓸 것 — 모드 토글/`case`문 추가 금지(git 히스토리가 예전 버전 보관).
   스윕 축은 CV **fold**(`FOLDS=(0 1 2 3 4)`), seed-replicate 아님 — `seed="${fold}" data.fold="${fold}"` 명시.
@@ -77,7 +77,7 @@ srun --partition="$SLURM_PARTITION" --qos="$SLURM_QOS" --gres="$SLURM_GRES" \
   라운드 종류를 분기해서 넣을 것.** 새 실험 축을 추가하면 그 라운드에 맞는 후속 조치를 `run_analyze()`
   안에 조건 분기로 추가할 것 — 기존 analyze가 안 맞으면 그냥 두지 말고 라운드에 맞는 걸로 바꿀 것.
 - **실험 검증 코드는 재사용 가능하면 `src/analysis/<YYMMDD_topic>/`, 일회성이면
-  `src/studies/<YYMMDD_topic>/`에 둔다**(§5.4 "결과 기록" 단계에서 나오는 코드가 여기 해당).
+  `src/studies/<YYMMDD_topic>/`에 둔다**(§4.4 "결과 기록" 단계에서 나오는 코드가 여기 해당).
 - **산출물 위치: 실험 하나 = 폴더 하나** — `logs/runs/<experiment_name>/`에 `train/`(hydra config, 로그, csv metrics),
   `eval/`, `analyze/`(csv·png), `checkpoints/`(`CHECKPOINT_DIR`이 있으면 lustre로 가는 symlink)가 모두 모인다.
   `ls logs/runs/<exp>` 한 번으로 로그·체크포인트·결과가 다 보여야 한다. `logs/`는 gitignore이고 `results/` 폴더는 없다.
@@ -101,21 +101,7 @@ srun --partition="$SLURM_PARTITION" --qos="$SLURM_QOS" --gres="$SLURM_GRES" \
   해결 방법이 적힌 오류를 낸다. 데이터를 repo 안에 복사하지 말 것. 자세한 규칙은 `data/README.md`.
 - 외부 코드는 `third_party/`의 git submodule로 둔다. 원본을 직접 수정하지 말 것.
 
-## 3. 모델 / loss / metric 규약 (상세는 각 폴더 README)
-
-코드 옆 README가 기준이다: [`src/models/README.md`](src/models/README.md), [`src/losses/README.md`](src/losses/README.md),
-[`src/metrics/README.md`](src/metrics/README.md). 매번 지킬 핵심만 여기 적는다.
-
-- **metric 수동 `.reset()` 금지.** `on_step`은 계산된 값이 아니라 메트릭 객체(`return self`)를 반환하고, 모델은 `log_dict(..., on_epoch=True)`로 로깅한다
-  (Lightning이 epoch마다 자동 리셋). "단순화"한다고 값을 반환하게 바꾸면 매 epoch 값이 누적 평균이 된다. `Trainer` 없이 순수 Python으로 호출해 "버그"라
-  오판하지 말고 실제 `Trainer`로 검증할 것. 이미 두 번 틀렸다 → `src/metrics/README.md`.
-- **`forward`는 스텝당 `ModelOutput` 하나**(`src/utils/model_output.py`)를 반환하고, loss와 metric이 같은 객체를 읽는다. outputs에는 모델만 만들 수 있는 값
-  (logits, 샘플한 마스크, 중간 feature)만 담고, softmax 같은 **결정적 전처리는 loss/metric이 직접** 한다. 확률적이거나 비싼 값을 loss가 다시 계산하지
-  말 것 → `src/models/README.md`, `src/losses/README.md`.
-- **loss 가중치·구현은 config**(`configs/losses/`, `model.loss.terms.<항>.weight`)로 바꾼다. 진단값은 loss가 아니라 `FieldMeanGroup` metric으로 로깅한다.
-- **`val/<name>_best`, `val/overfit_gap`은 `MetricTrends` 콜백**(`src/utils/callbacks.py`)이 만든다. 모델/metric에 만들지 말 것.
-
-## 4. ADR (Architecture Decision Record) 작성
+## 3. ADR (Architecture Decision Record) 작성
 
 `docs/adr/`에 프로젝트의 굵직한 아키텍처/방법론 결정을 기록한다. 규칙과 템플릿은 `docs/adr/README.md` 참고.
 
@@ -124,22 +110,22 @@ srun --partition="$SLURM_PARTITION" --qos="$SLURM_QOS" --gres="$SLURM_GRES" \
 작성(또는 제안)할 것. 실험 config 조정, 하이퍼파라미터 튜닝처럼 작은 결정은 대상이 아니다. 애매하면 작성
 여부를 사용자에게 먼저 물어본다.
 
-## 5. 실험 진행 형식
+## 4. 실험 진행 형식
 
-§6이 "끝난 뒤 어떻게 **보고**하나"라면, 이건 "실험을 **어떤 형식으로 진행**하나"다. 원인을 찾는 실험이든
+§5가 "끝난 뒤 어떻게 **보고**하나"라면, 이건 "실험을 **어떤 형식으로 진행**하나"다. 원인을 찾는 실험이든
 개선을 검증하는 실험이든 아래 네 단계를 순서대로 밟고, 각 단계의 결과물을 문서에 남길 것.
 
-### 5.1 원인 진단
+### 4.1 원인 진단
 
 무엇이 문제인지 **측정한 숫자로** 먼저 확정한다. 가설이 그럴듯하다는 건 증거가 아니다.
 원인 후보가 여럿이면 각각의 기여도를 분해해서 잰다.
 
-### 5.2 실험 설계
+### 4.2 실험 설계
 
 한 arm에 변경 하나. 조합을 보고 싶으면 단독 arm도 같이 넣는다. 도달 목표가 되는 기준선과
 문제가 재현되는 상태를 **양 끝으로 같이** 돌려서, 개선이 무엇 대비 개선인지 명확하게 한다.
 
-### 5.3 판정 기준
+### 4.3 판정 기준
 
 결과를 **보기 전에** "어떤 관찰이 나오면 어떻게 해석하고 다음에 뭘 할지"를 표로 써둔다.
 결과를 본 뒤에 기준을 만들면 원하는 결론에 맞춰 읽게 된다.
@@ -150,13 +136,13 @@ srun --partition="$SLURM_PARTITION" --qos="$SLURM_QOS" --gres="$SLURM_GRES" \
 | 일부만 회복 | 원인이 더 있음 | 나머지 분해 |
 | 변화 없음 | 접근이 부족 | 방향 전환 |
 
-### 5.4 결과 기록
+### 4.4 결과 기록
 
 성공/실패 여부와 **왜 그런지**를 문서에 남긴다. 음성 결과도 남겨야 다음 세션이 같은 걸 다시
 하지 않는다. 이전 결론을 뒤집게 되면 지우지 말고 취소선 + 정정 링크. 검증 코드·로그를
 어디 둘지는 §2 참조.
 
-### 5.5 자주 틀리는 것
+### 4.5 자주 틀리는 것
 
 - **성능이 나쁜 것 ≠ 아이디어가 틀린 것** — NaN·발산은 버그 신호로 먼저 의심할 것. 구현이
   맞다는 걸 확인하기 전에 기능을 지우지 말 것.
@@ -170,7 +156,7 @@ srun --partition="$SLURM_PARTITION" --qos="$SLURM_QOS" --gres="$SLURM_GRES" \
 - **`ModelCheckpoint`의 `save_last`** — 모니터 지표가 천장에 닿아 더 이상 개선되지 않으면 "last"도
   같이 멈춘다. 마지막 epoch 체크포인트가 필요하면 `configs/callbacks/model_checkpoint_last.yaml`을 쓴다.
 
-## 6. 실험 결과 보고 형식
+## 5. 실험 결과 보고 형식
 
 실험(학습/분석 잡)이 끝나고 사용자에게 결과를 알려줄 때는 아래 6가지를 **전부** 포함해서
 설명할 것 — 결과 숫자만 던지지 말 것:
@@ -188,20 +174,20 @@ srun --partition="$SLURM_PARTITION" --qos="$SLURM_QOS" --gres="$SLURM_GRES" \
 6. **다음으로 해야 할 것** — 이 결과를 보고 나서 자연스럽게 이어지는 다음 스텝(추가 검증,
    확정 못 한 부분, 후속 실험 등)을 제안할 것.
 
-## 7. "그려줘" / "plot 그려줘" 요청
+## 6. "그려줘" / "plot 그려줘" 요청
 
 "그려줘", "그래프/막대그래프/plot 그려줘"라고 하면 **Artifact(HTML)가 아니라 실제 plot 파일**(matplotlib
 등으로 렌더링한 PNG/PDF 등 이미지 파일)을 만들라는 뜻이다. Artifact HTML 페이지를 만들어서 publish하지
 말 것 — 이 실수를 이미 두 번 반복했다. 결과 이미지는 Read 도구로 직접 보여주거나 파일 경로를 알려주면 된다.
 사용자가 명시적으로 "아티팩트로 만들어줘"/"웹페이지로" 등을 요청할 때만 Artifact를 쓴다.
 
-## 8. 이 파일 관리
+## 7. 이 파일 관리
 
-- AI가 같은 실수를 두 번 이상 반복하면 여기에 추가한다(가장 위험한 것이 위로 오도록 §1~§3 안에 배치).
-- 프로젝트 특화 내용은 아래 §9에만 쓴다. 위 §0~§8은 모든 연구 프로젝트에 공통이므로 template 갱신과
+- AI가 같은 실수를 두 번 이상 반복하면 여기에 추가한다(가장 위험한 것이 위로 오도록 §1~§2 안에 배치).
+- 프로젝트 특화 내용은 아래 §8에만 쓴다. 위 §0~§7은 모든 연구 프로젝트에 공통이므로 template 갱신과
   함께 유지한다.
 
-## 9. 프로젝트별 메모 (새 프로젝트에서 채울 것)
+## 8. 프로젝트별 메모 (새 프로젝트에서 채울 것)
 
 - 프로젝트 한 줄 소개:
 - venv / `CHECKPOINT_DIR` 위치:

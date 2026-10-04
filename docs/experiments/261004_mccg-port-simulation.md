@@ -42,5 +42,5 @@ SCM cascade의 축소판 `MiniCascade`(표 컬럼 4개 중 연속형 1개, 이�
 
 ## 7. 다음
 1. 실제 모델 하나(예: 구조가 가장 단순한 `tabimg_posthoc`)를 MCCG 쪽에서 실제로 옮겨 값 동일성을 확인.
-2. §6의 모델-loss 결합(공유 config 키)과 loss·metric 공유 상수 패턴을 각 폴더 README(`src/losses/README.md`)와 `CLAUDE.md` §3에 규칙으로 추가.
+2. §6의 모델-loss 결합(공유 config 키)과 loss·metric 공유 상수 패턴을 각 폴더 README(`src/losses/README.md`)에 규칙으로 추가.
 3. 표본 가중치 항을 가진 term 하나를 시뮬레이션에 추가해 batch에서 읽는 경로를 확인.

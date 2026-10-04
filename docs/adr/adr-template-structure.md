@@ -15,7 +15,7 @@
 
 ```
 research-template/
-├── CLAUDE.md              AI 작업 규칙 + 반복된 실수(gotchas)를 한 파일에. §9에 프로젝트별 메모
+├── CLAUDE.md              AI 작업 규칙 + 반복된 실수(gotchas)를 한 파일에. §8에 프로젝트별 메모
 ├── README.md              새 프로젝트 시작 체크리스트, 구조 표
 ├── .env.example           CHECKPOINT_DIR, VENV, WANDB_*, 캐시 경로 (데이터는 data/ 링크, DATA_DIR 없음)
 ├── configs/               Hydra 설정
@@ -57,7 +57,7 @@ research-template/
   `callbacks=default_resumable`의 `seed<N>_resume.ckpt`와 저장된 wandb id로 이어서 돈다.
 - 스모크 테스트는 `debug=smoke logger=csv` (결과는 `logs/smoke/`로 격리), wandb는 실제 실험에서만.
 
-**모델 / loss / metric 인터페이스** (각 폴더 README: `src/models/`, `src/losses/`, `src/metrics/`, 요약은 CLAUDE.md §3)
+**모델 / loss / metric 인터페이스** (각 폴더 README: `src/models/`, `src/losses/`, `src/metrics/`)
 - `forward`는 스텝당 `ModelOutput`(`logits`, `target`, `preds`, `extras`)을 한 번만 만든다. loss와 metric이 같은 객체를 읽는다.
 - outputs에는 모델만 만들 수 있는 값(logits, forward 중 샘플한 마스크, 중간 feature)만 담고, 결정적 전처리는 loss/metric이 소유한다. 그래야 config에서
   loss/metric을 바꿔 끼워도 모델을 건드리지 않는다.
@@ -84,7 +84,7 @@ MNIST 예제(합성 toy 예제로 대체), notebooks, `setup.py`, 사용하지 �
 JointDLM식 `results.py`, 실험 비교 스크립트(`compare_experiments.py`), skills 복사본(목록만 README에 기록).
 
 ## Consequences
-- 새 프로젝트는 복사 직후 같은 실행 폴더·스윕·재개·loss/metric 구조·문서 규칙을 갖고, 프로젝트별 차이는 `CLAUDE.md` §9와 `docs/CONTEXT.md`에만 쓴다.
+- 새 프로젝트는 복사 직후 같은 실행 폴더·스윕·재개·loss/metric 구조·문서 규칙을 갖고, 프로젝트별 차이는 `CLAUDE.md` §8과 `docs/CONTEXT.md`에만 쓴다.
 - 대가: 구조 규칙이 많아 처음 읽는 비용이 있고, 템플릿이 갱신되면 기존 프로젝트에는 수동으로 반영해야 한다(`scripts/sbatch/README.md`에 template이 기준임을 명시).
 - 모델-loss 결합(loss 선택이 head 출력 의미를 바꾸는 경우), loss와 metric이 공유하는 상수, 표본 가중치 항은 아직 구조가 규칙으로 다루지 않는다
   (`docs/experiments/261004_mccg-port-simulation.md` §6).
@@ -92,5 +92,5 @@ JointDLM식 `results.py`, 실험 비교 스크립트(`compare_experiments.py`), 
 
 ## 변경 이력
 - 2026-10-04: 최초 작성.
-- 2026-10-04: 모델/loss/metric 규약의 상세를 `src/models|losses|metrics/README.md`로 옮기고 CLAUDE.md §3에는 핵심만 남김.
+- 2026-10-04: 모델/loss/metric 규약을 `src/models|losses|metrics/README.md`로 옮기고 CLAUDE.md에서는 삭제(이후 섹션 번호가 한 칸씩 당겨짐: ADR §3, 실험 진행 §4, 보고 §5, 그려줘 §6, 파일 관리 §7, 프로젝트별 메모 §8).
 - 2026-10-04: 실행 산출물을 task-first(`logs/<task>/runs/<exp>`)에서 experiment-first(`logs/runs/<exp>/{train,eval,analyze,checkpoints}`)로 변경, `results/` 폴더 삭제, 그림 승격 규칙 추가.

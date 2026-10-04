@@ -31,7 +31,7 @@ class _OutputsHandler(MetricHandler):
         self.update(preds, target)
         # Return the Metric itself: logged via log_dict(on_epoch=True), Lightning auto-computes and
         # resets it at each real epoch boundary (and isolates it from sanity-check batches) -- no
-        # manual .reset() calls needed anywhere (CLAUDE.md §3).
+        # manual .reset() calls needed anywhere (src/metrics/README.md).
         return self
 
     def on_epoch_end(self, split, *args, **kwargs):

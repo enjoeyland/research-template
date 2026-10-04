@@ -1,7 +1,7 @@
 """What a model's ``forward`` hands to losses and metrics.
 
 One ``ModelOutput`` per step, computed ONCE and read by both ``loss_fn(outputs, batch)`` and
-``metrics.on_step(split, outputs, batch, ...)``. Boundary rule (see CLAUDE.md §3):
+``metrics.on_step(split, outputs, batch, ...)``. Boundary rule (see src/models/README.md):
 
   * outputs hold what only the model can produce: network outputs (``logits``), values sampled during
     forward (masks, noise), intermediate features -> ``extras``,

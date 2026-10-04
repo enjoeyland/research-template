@@ -5,7 +5,7 @@ IMPORTANT: TaskMetrics/MetricGroup have no reset() calls of their own in on_epoc
 routed through `self.log()`/`log_dict(..., on_epoch=True)`, which is exactly what `on_step` returning
 `self` (not the computed value) is for. So these tests must run through a real `lightning.Trainer` --
 calling on_step()/on_epoch_end() directly in plain Python has no such auto-reset and would give a
-false negative (CLAUDE.md §3).
+false negative (src/metrics/README.md).
 """
 
 import torch
