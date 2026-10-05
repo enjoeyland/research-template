@@ -27,7 +27,6 @@
 
 | 문서 | 내용 |
 |---|---|
-| [261005_debug-run-isolation-and-pkg-resources.md](implementation/261005_debug-run-isolation-and-pkg-resources.md) | `debug=smoke`가 실제 실행의 체크포인트를 재개/오염시키던 문제, 테스트 헬퍼의 `pkg_resources` 의존 |
 
 ### experiments/
 
