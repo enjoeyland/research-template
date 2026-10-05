@@ -1,6 +1,6 @@
 import platform
+from importlib.metadata import PackageNotFoundError, version
 
-import pkg_resources
 from lightning.fabric.accelerators import TPUAccelerator
 
 
@@ -11,9 +11,11 @@ def _package_available(package_name: str) -> bool:
 
     :return: `True` if the package is available. `False` otherwise.
     """
+    # importlib.metadata (stdlib): pkg_resources lives in setuptools, which Python 3.12 venvs do not ship
     try:
-        return pkg_resources.require(package_name) is not None
-    except pkg_resources.DistributionNotFound:
+        version(package_name)
+        return True
+    except PackageNotFoundError:
         return False
 
 

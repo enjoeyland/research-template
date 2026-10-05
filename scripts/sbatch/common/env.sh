@@ -33,7 +33,8 @@ else
   PYTHON="$(command -v python3 || command -v python)"
 fi
 
-CKPT_ROOT="$(_dotenv CHECKPOINT_DIR)"
+# CHECKPOINT_DIR: the environment wins over .env (same as the python side, where rootutils does not override set variables)
+CKPT_ROOT="${CHECKPOINT_DIR:-$(_dotenv CHECKPOINT_DIR)}"
 CKPT_ROOT="${CKPT_ROOT:-logs}"
 
 mkdir -p "logs/slurm/$(date +%Y-%m-%d)"
@@ -43,9 +44,19 @@ unset _ENV_DIR
 # Checkpoint path helpers -- one folder per experiment, seed<N>_epoch_*.ckpt filenames
 # (see configs/callbacks/default.yaml).
 
+# EXTRA_ARGS = extra hydra overrides the launcher passes to train.py (e.g. EXTRA_ARGS="debug=smoke").
+is_debug_run() { [[ " ${EXTRA_ARGS:-} " == *" debug="* ]]; }
+is_smoke_run() { [[ " ${EXTRA_ARGS:-} " == *" debug=smoke "* ]]; }
+
 checkpoint_dir() {
   local experiment="${1:?}"
-  echo "${CKPT_ROOT}/runs/${experiment}/checkpoints"
+  # debug=smoke isolates the whole run tree under logs/smoke (configs/debug/smoke.yaml) and never writes to
+  # CHECKPOINT_DIR, so the helpers (resume, "was a checkpoint written") must look there too.
+  if is_smoke_run; then
+    echo "logs/smoke/runs/${experiment}/checkpoints"
+  else
+    echo "${CKPT_ROOT}/runs/${experiment}/checkpoints"
+  fi
 }
 
 seed_ckpt_path() {

@@ -30,6 +30,14 @@ _resume_ckpt_ok() {
 prepare_resume() {
   local experiment="${1:?}" seed="${2:?}" wandb_name="${3:?}"
   local ckdir resume_ckpt wandb_id id_file
+
+  # A debug run (EXTRA_ARGS="debug=...") never resumes and never touches the real run's checkpoint folder: it writes to its own
+  # isolated tree (debug=smoke -> logs/smoke), so a same-named real experiment's seed<N>_resume.ckpt / wandb id must not leak in.
+  RESUME_ARGS=()
+  if is_debug_run; then
+    echo "=== debug run (${EXTRA_ARGS}): no resume, no wandb id file ===" >&2
+    return 0
+  fi
   ckdir="$(checkpoint_dir "${experiment}")"
   resume_ckpt="${ckdir}/seed${seed}_resume.ckpt"
   id_file="${ckdir}/wandb_id_seed${seed}.txt"   # per seed -- seeds of one experiment share the dir without mixing ids

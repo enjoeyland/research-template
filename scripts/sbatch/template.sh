@@ -19,6 +19,7 @@
 #   LOCAL=1 ./scripts/my_sweep.sh
 #   ANALYZE_PROFILE=cpu ./scripts/my_sweep.sh
 #   LOGGER=csv ./scripts/my_sweep.sh      # no wandb (smoke tests)
+#   EXTRA_ARGS="debug=smoke" LOGGER=csv ./scripts/my_sweep.sh   # smoke test: isolated under logs/smoke, never resumes
 set -euo pipefail
 
 # sbatch runs a copy of this file from the slurm spool dir, so locate common/ via SLURM_SUBMIT_DIR
@@ -71,13 +72,21 @@ run_one () {
   # mid-run resume + wandb run id (scripts/sbatch/common/resume.sh): fills RESUME_ARGS
   prepare_resume "${exp_name}" "${fold}" "${wandb_name}"
 
+  # extra hydra overrides, e.g. EXTRA_ARGS="debug=smoke" (split on spaces)
+  local -a EXTRA=()
+  read -r -a EXTRA <<< "${EXTRA_ARGS:-}"
+
   echo "=== train: experiment=${experiment} fold=${fold} ==="
   python src/train.py experiment/train="${experiment}" seed="${fold}" data.fold="${fold}" \
     experiment_name="${exp_name}" \
     trainer="${TRAINER}" \
     logger="${LOGGER:-wandb}" ${LOGGER:+extras.enforce_tags=False} \
-    "${WANDB_ARGS[@]}" "${RESUME_ARGS[@]}"
+    "${WANDB_ARGS[@]}" "${RESUME_ARGS[@]}" "${EXTRA[@]}"
 
+  # debug runs other than smoke turn the callbacks off, so no checkpoint is written (smoke writes under logs/smoke)
+  if is_debug_run && ! is_smoke_run; then
+    return 0
+  fi
   if ! seed_ckpt_exists "${exp_name}" "${fold}"; then
     echo "error: no checkpoint for fold=${fold} under $(checkpoint_dir "${exp_name}")" >&2
     return 1
