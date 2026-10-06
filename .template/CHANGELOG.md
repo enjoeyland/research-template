@@ -6,7 +6,9 @@
 ## v6 (2026-10-06) — CLAUDE.md에 research/ 규칙
 - 변경: `CLAUDE.md` §2에 `research/`는 사용자가 직접 쓰는 폴더이고 AI는 읽기만 한다는 규칙을 추가했다(v5에서 폴더만 만들고 AI 지침이 빠져 있었다).
 - 다운스트림에서 할 일: v5의 `research/`를 쓰는 프로젝트는 `CLAUDE.md`에 같은 항목을 옮긴다.
-- 영향 경로: `CLAUDE.md`.
+- 변경: `research/README.md`와 템플릿에서 저자/AI 역할을 가르는 표현("사용자가 쓰고 AI는 읽기만", 1인칭 "내 말로")을 뺐다. 이 글은 다른 사람과 논의하거나 논문에 쓰는 문서라서 README에
+  "사용자"/"AI"가 나오지 않는다. AI에게 주는 지침은 `CLAUDE.md` §2에만 둔다.
+- 영향 경로: `CLAUDE.md`, `research/`.
 
 ## v5 (2026-10-06) — 사용자 소유 폴더 research/
 - 추가: `research/`(사용자가 직접 쓰는 논의·논문 정리 폴더; AI는 읽기만, 요청이 있을 때만 수정). `YYMMDD_<주제>/`마다 `YYMMDD_<주제>.md` + `YYMMDD_<주제>.pptx` + `figures/`(파일 이름에 주제를 넣어
