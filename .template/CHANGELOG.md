@@ -6,9 +6,11 @@
 ## v7 (2026-10-06) — 테스트 정리
 - 변경: template 전용 테스트(`test_template_status.py`: `make rename`, 버전·changelog 일관성, template-status)를 `tests/`에서 `.template/tests/`로 옮겼다(`make rename`이 폴더째 지우므로 프로젝트에는 안 간다).
   `make test`와 CI는 `tests src`(+ `.template/tests`가 있으면 그것도)를 돌린다. `pytest . .template/tests`는 하위 경로를 중복으로 보고 빼 버려서 폴더를 따로 나열한다.
-- 삭제: `tests/helpers/{run_if,package_available}.py`에서 쓰이지 않는 플래그(tpu, fairscale, deepspeed, neptune, comet, mlflow, skip_windows, min_torch, max_torch, min_python).
+- 삭제: `tests/test_sweeps.py`(hydra multirun/optuna 테스트 5개). sweep은 `scripts/sbatch/`로 하고, 이 테스트는 `sh` 패키지가 없어서 항상 건너뛰었으며 `sh`를 켜 보니 헬퍼가
+  최신 pytest(9.x)에 없는 `pytest.fail(msg=...)`를 불러 깨져 있었다. 함께 `tests/helpers/{run_sh_command,package_available}.py`, `requirements.txt`의 `# sh` 주석.
+- 삭제: `tests/helpers/run_if.py`에서 쓰이지 않는 플래그(tpu, fairscale, deepspeed, neptune, comet, mlflow, sh, wandb, skip_windows, min_torch, max_torch, min_python). `RunIf(min_gpus=N)`만 남는다.
 - 변경: `pyproject.toml`의 pytest 설정에 `pythonpath = ["."]`, `minversion = "7.0"`(`tests/` 밖의 테스트가 `src`를 import할 수 있게).
-- 다운스트림에서 할 일: `tests/test_template_status.py`가 있으면 지운다. `tests/helpers/`를 가져오고 `pyproject.toml`의 pytest 설정, `Makefile`의 `test`/`test-full`, `.github/workflows/test.yml`의 pytest 줄을 반영한다.
+- 다운스트림에서 할 일: `tests/test_template_status.py`가 있으면 지운다. `tests/test_sweeps.py`와 `tests/helpers/{run_sh_command,package_available}.py`를 지운다. `tests/helpers/run_if.py`를 가져오고 `pyproject.toml`의 pytest 설정, `Makefile`의 `test`/`test-full`, `.github/workflows/test.yml`의 pytest 줄을 반영한다.
 - 영향 경로: `tests/helpers/`, `pyproject.toml`, `Makefile`, `.github/workflows/test.yml`.
 
 ## v6 (2026-10-06) — CLAUDE.md에 research/ 규칙
