@@ -32,4 +32,3 @@
 
 | 문서 | 내용 |
 |---|---|
-| [261004_mccg-port-simulation.md](experiments/261004_mccg-port-simulation.md) | MCCG SCM cascade를 `src/losses`·`src/metrics` 구조로 옮기는 시뮬레이션: 수치 동일성, 드러난 빈 곳(`PassBlend`/`FieldTerm`/`FieldMean` 추가), 한계 |
