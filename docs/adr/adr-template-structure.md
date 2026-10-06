@@ -36,6 +36,7 @@ research-template/
 ├── scripts/               학습 스윕 실행기 전용(shell). sbatch/ = SLURM 스윕 인프라 (common/, profiles/, template.sh, template_study.sh)
 ├── data/                  무거운 데이터셋의 심볼릭 링크만 (gitignore, README만 추적)
 ├── third_party/           외부 코드(git submodule) 전용. repo마다 자기 venv
+├── research/              **사용자가 직접 쓰는** 논의·논문 정리(AI는 읽기만). YYMMDD_<주제>/ 폴더마다 .md + .pptx + figures/, 파일 이름에 주제를 넣는다. paper/는 별도 repo라 gitignore
 ├── docs/                  proposals/ experiments/ implementation/ adr/ figures/ papers/(PDF, gitignore) + CONTEXT.md, README.md
 ├── logs/                  실행 산출물 (gitignore). runs/<experiment>/{train,eval,analyze,checkpoints}가 한곳에,
 │                          slurm/ smoke/ studies/ 는 따로. results/ 폴더는 없다

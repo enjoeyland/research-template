@@ -152,3 +152,6 @@ checkpoints
 # papers (PDFs stay local; folder kept via .gitkeep)
 docs/papers/*
 !docs/papers/.gitkeep
+
+# research/paper is a separate repository (Overleaf etc.)
+research/paper/

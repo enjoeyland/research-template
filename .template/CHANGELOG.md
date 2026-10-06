@@ -3,6 +3,12 @@
 다운스트림에 영향이 있는 변경 **묶음마다 한 번** 버전을 올린다(규칙: [MAINTAINING.md](MAINTAINING.md)). 프로젝트는 `make template-status`로 자기 버전(`.template-version`)과
 최신을 비교한다. 각 버전의 태그는 `template-vN`이다. 항목마다 **다운스트림에서 할 일**과 **영향 경로**를 적는다.
 
+## v5 (2026-10-06) — 사용자 소유 폴더 research/
+- 추가: `research/`(사용자가 직접 쓰는 논의·논문 정리 폴더; AI는 읽기만, 요청이 있을 때만 수정). `YYMMDD_<주제>/`마다 `YYMMDD_<주제>.md` + `YYMMDD_<주제>.pptx` + `figures/`(파일 이름에 주제를 넣어
+  따로 내려받아도 알 수 있게), `_TEMPLATE/YYMMDD_topic.md`(글 템플릿), `research/paper/`는 gitignore(별도 repo).
+- 다운스트림에서 할 일: 선택. 쓰려면 `research/`와 `.gitignore`의 `research/paper/` 줄을 가져온다.
+- 영향 경로: `research/`, `.gitignore`, `docs/adr/adr-template-structure.md`(구조).
+
 ## v4 (2026-10-06) — template 관리 구조
 - 추가: `.template/`(template 전용: 이 변경 이력, 유지 규칙, 다운스트림 현황), `.template-version`(프로젝트의 버전 표식), `make template-status` / `make template-mark-synced`
   (`src/template_status.py`).
