@@ -54,6 +54,9 @@
   (이 repo 안, `logs/slurm/...`)로 잡는다 — 컴퓨트 노드의 `/tmp`는 로그인 노드와 다른 디스크다.
 - **불량 노드**: 프로필의 `SLURM_EXCLUDE`(CUDA 초기화가 실패하는 노드 목록)를 반드시 `--exclude`에 넘길 것.
   새 불량 노드를 발견하면 `scripts/sbatch/check_node_health.sh`로 확인한 뒤 프로필에 근거와 함께 추가한다.
+- **gpu48은 GPU를 받기 어렵다**: 제출 전에 `TEST_ONLY=1 PROFILE=gpu48 ./scripts/<model>_train.sh`로 `sbatch --test-only`의 예상 시작 시각을
+  보고 제출할 것(제출만 하면 같은 값이 출력되지만 `TEST_ONLY=1`은 제출하지 않는다). 대기가 길면 gpu24/gpu96을 고려한다. 동시 4개 이상을
+  3시간 넘게 돌리면 중간에 멈출 수 있다는 경고가 나오므로, 경고가 뜨면 `MAX_GPUS=3`이나 `TIME=03:00:00`으로 낮출 것.
 
 **실행 예제:**
 
