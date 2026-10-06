@@ -1,7 +1,7 @@
 # ADR: research-template의 폴더 구조와 규칙
 
 ## Status
-승인됨. (날짜 없는 파일명은 이 문서가 템플릿 자체의 기준 문서이기 때문이다. 이후 변경은 이 문서를 고치고 아래 "변경 이력"에 적는다.)
+승인됨. (날짜 없는 파일명은 이 문서가 템플릿 자체의 기준 문서이기 때문이다. 이후 구조·규칙이 바뀌면 이 문서의 본문을 현재 상태로 고친다. 변경 이력과 버전은 template repo의 `.template/CHANGELOG.md`에 있다.)
 
 ## Context
 새 연구 프로젝트를 만들 때마다 구조를 처음부터 다시 정하고, 이전 프로젝트에서 검증된 것(실행 폴더 규칙, SLURM 스윕, 재개, 규칙 문서)을
@@ -17,6 +17,8 @@
 research-template/
 ├── CLAUDE.md              AI 작업 규칙 + 반복된 실수(gotchas)를 한 파일에. §8에 프로젝트별 메모
 ├── README.md              새 프로젝트 시작 체크리스트, 구조 표
+├── .template/             template repo 전용: CHANGELOG.md(버전별 변경 이력), DOWNSTREAM.md(쓰는 프로젝트 현황), MAINTAINING.md(template을 고칠 때의 규칙). make rename이 삭제
+├── .template-version      이 프로젝트가 만들어진/마지막으로 맞춘 template 버전과 template이 소유한 경로 (make template-status가 읽는다)
 ├── .env.example           CHECKPOINT_DIR, VENV, WANDB_*, 캐시 경로 (데이터는 data/ 링크, DATA_DIR 없음)
 ├── configs/               Hydra 설정
 │   ├── train.yaml, eval.yaml, analyze.yaml      엔트리포인트별 기본 조합
@@ -90,7 +92,7 @@ research-template/
 
 **새 프로젝트 시작 체크리스트**
 1. 이 repo를 복사해서 새 repo를 만든다(GitHub "Use this template" 또는 `git clone` 후 remote 교체).
-2. 프로젝트 이름을 정한다: `make rename NAME=<project-name>`(README 제목, `environment.yaml`, `.env.example`의 `PROJECT_NAME`을 바꾼다).
+2. 프로젝트 이름을 정한다: `make rename NAME=<project-name>`(README 제목, `environment.yaml`, `.env.example`의 `PROJECT_NAME`을 바꾸고, template 전용 폴더 `.template/`을 지운다).
    그다음 `cp .env.example .env`. `PROJECT_NAME` 한 줄이 체크포인트 폴더(`CHECKPOINT_DIR`), sbatch venv 이름, wandb project 기본값을 정한다.
 3. `/scratch2/$USER/venvs/<PROJECT_NAME>`에 venv를 만들고 `requirements.txt`를 설치한다(GPU 클러스터에서는 torch를 먼저, 헤더 설명 참고).
 4. 예제(toy)를 내 것으로 교체한다: `src/data/toy_datamodule.py`, `src/models/toy_module.py`, `configs/{data,model,metrics,losses}/toy*.yaml`,
@@ -124,12 +126,7 @@ JointDLM식 `results.py`, 실험 비교 스크립트(`compare_experiments.py`), 
 - 모델-loss 결합(loss 선택이 head 출력 의미를 바꾸는 경우), loss와 metric이 공유하는 상수, 표본 가중치 항은 아직 구조가 규칙으로 다루지 않는다.
 - `scripts/sbatch/`의 SLURM 불량 노드 목록과 파티션은 클러스터 고유 정보이므로 다른 클러스터에서는 `profiles/`를 고쳐야 한다.
 
-## 변경 이력
-- 2026-10-04: 최초 작성.
-- 2026-10-05: third_party 사용 방식(세 가지, 한 실험 폴더, 독립 실행 규칙)과 모델 "패턴 2: 어댑터"를 README에 추가.
-- 2026-10-05: 사용법(새 프로젝트 체크리스트, 실행 명령, skills)을 이 문서에 추가 — 최상위 README가 프로젝트 README로 교체되기 때문.
-- 2026-10-06: study/analysis의 실행 셸을 코드 옆(`src/studies|analysis/<주제>/run.sh`)에 두기로 하고(`scripts/`는 학습 스윕 전용), 반복해서 쓰는 study는 `src/analysis/`로 승격. `template_study.sh`와 어느 깊이에서든 repo 루트를 찾는 스니펫 추가.
-- 2026-10-05: GitHub Actions를 최소 CPU 테스트 workflow 하나로 축소.
-- 2026-10-05: `docs/implementation/`(코드 수정 이력) 추가. 캐시 위치를 `src/cache_env.py` 대신 `.env.example`로 이동.
-- 2026-10-04: 모델/loss/metric 규약을 `src/models|losses|metrics/README.md`로 옮기고 CLAUDE.md에서는 삭제(이후 섹션 번호가 한 칸씩 당겨짐: 문서화 §3, 실험 진행 §4, 보고 §5, 그려줘 §6, 파일 관리 §7, 프로젝트별 메모 §8).
-- 2026-10-04: 실행 산출물을 task-first(`logs/<task>/runs/<exp>`)에서 experiment-first(`logs/runs/<exp>/{train,eval,analyze,checkpoints}`)로 변경, `results/` 폴더 삭제, 그림 승격 규칙 추가.
+## template 버전과 뒤처짐 확인
+- 버전은 정수이고 **다운스트림에 영향이 있는 변경 묶음마다 한 번** 올린다. 변경 이력은 template repo의 `.template/CHANGELOG.md`(버전별: 무엇이 바뀌었나, 다운스트림에서 할 일, 영향 경로), 태그는 `template-vN`.
+- 각 프로젝트는 `.template-version`에 자기 버전을 가진다. `make template-status`가 template의 최신 changelog를 받아 와서 자기보다 새로운 버전과 할 일을 보여 주고,
+  동기화한 뒤에는 `make template-mark-synced`로 버전을 맞춘다(`src/template_status.py`, 표준 라이브러리만 사용).

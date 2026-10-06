@@ -9,7 +9,7 @@ fork해서, 실제 연구 프로젝트(Medical-CausalInference, JointDLM)에서 
 ## 새 프로젝트 시작 체크리스트
 
 1. 이 repo를 복사해서 새 repo를 만든다 (GitHub "Use this template" 또는 `git clone` 후 remote 교체).
-2. 프로젝트 이름을 정한다: `make rename NAME=<project-name>` (README 제목, `environment.yaml`, `.env.example`의 `PROJECT_NAME`을 바꾼다). 그다음 `cp .env.example .env`.
+2. 프로젝트 이름을 정한다: `make rename NAME=<project-name>` (README 제목, `environment.yaml`, `.env.example`의 `PROJECT_NAME`을 바꾸고 template 전용 폴더 `.template/`을 지운다). 그다음 `cp .env.example .env`.
    `PROJECT_NAME` 한 줄이 체크포인트 폴더(`CHECKPOINT_DIR`), sbatch venv 이름, wandb project 기본값을 정한다.
 3. venv 만들고 `requirements.txt` 설치 (헤더 설명 참고, GPU 클러스터에서는 torch를 먼저 설치).
 4. 예제(toy)를 내 것으로 교체:

@@ -32,10 +32,22 @@ train: ## Train with default config
 analyze: ## Post-hoc analysis (src/analyze.py)
 	python src/analyze.py
 
-rename: ## Set the project name everywhere:  make rename NAME=my-project
+template-status: ## How far this project is behind the template (reads .template-version, needs network)
+	python src/template_status.py
+
+template-mark-synced: ## After applying the template's changes: record the template's latest version in .template-version
+	python src/template_status.py --mark-synced
+
+rename: ## Set the project name everywhere and drop the template-only files:  make rename NAME=my-project
 	@echo "$(NAME)" | grep -Eq '^[A-Za-z0-9._-]+$$' || { echo "usage: make rename NAME=<project-name>   (letters, digits, . _ -)"; exit 1; }
+	@# never run inside the template repo itself (origin == the url in .template-version), unless FORCE=1
+	@tpl="$$(sed -n 's/^url: *//p' .template-version 2>/dev/null | sed -E 's#^(https://|git@)##; s#:#/#; s#\.git$$##')"; \
+	 org="$$(git remote get-url origin 2>/dev/null | sed -E 's#^(https://|git@)##; s#:#/#; s#\.git$$##')"; \
+	 if [ -n "$$tpl" ] && [ "$$tpl" = "$$org" ] && [ -z "$(FORCE)" ]; then \
+	   echo "refusing: this is the template repo itself (origin == $$tpl). Run it in a project created from the template (FORCE=1 to override)."; exit 1; fi
 	sed -i '1s/.*/# $(NAME)/' README.md
 	sed -i 's/^name: .*/name: $(NAME)/' environment.yaml
 	sed -i 's/^PROJECT_NAME=.*/PROJECT_NAME=$(NAME)/' .env.example
 	@if [ -f .env ]; then sed -i 's/^PROJECT_NAME=.*/PROJECT_NAME=$(NAME)/' .env; fi
+	@if [ -d .template ]; then rm -rf .template; echo "removed .template/ (template-only: changelog, maintenance rules, downstream status)"; fi
 	@echo "project name -> $(NAME)  (README title, environment.yaml, .env.example/.env PROJECT_NAME)"
