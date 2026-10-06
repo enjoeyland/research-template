@@ -9,9 +9,12 @@
 - 삭제: `tests/test_sweeps.py`(hydra multirun/optuna 테스트 5개). sweep은 `scripts/sbatch/`로 하고, 이 테스트는 `sh` 패키지가 없어서 항상 건너뛰었으며 `sh`를 켜 보니 헬퍼가
   최신 pytest(9.x)에 없는 `pytest.fail(msg=...)`를 불러 깨져 있었다. 함께 `tests/helpers/{run_sh_command,package_available}.py`, `requirements.txt`의 `# sh` 주석.
 - 삭제: `tests/helpers/run_if.py`에서 쓰이지 않는 플래그(tpu, fairscale, deepspeed, neptune, comet, mlflow, sh, wandb, skip_windows, min_torch, max_torch, min_python). `RunIf(min_gpus=N)`만 남는다.
+- 삭제: Hydra Optuna sweep 지원(`configs/hparams_search/`, `train.yaml`의 `hparams_search` 그룹, `requirements.txt`/`environment.yaml`의 `hydra-optuna-sweeper`, `utils.get_metric_value`와 `train.py main()`의 반환값).
+  나중에 필요하면 branch를 나누지 말고 `git show template-v6:configs/hparams_search/toy_optuna.yaml`로 가져와 프로젝트에 추가한다(위 항목을 `requirements.txt`에 되돌리고
+  `train.yaml`에 `- hparams_search: null`, `main()`이 `get_metric_value(metric_dict, cfg.get("optimized_metric"))`를 반환하게 한다).
 - 변경: `pyproject.toml`의 pytest 설정에 `pythonpath = ["."]`, `minversion = "7.0"`(`tests/` 밖의 테스트가 `src`를 import할 수 있게).
-- 다운스트림에서 할 일: `tests/test_template_status.py`가 있으면 지운다. `tests/test_sweeps.py`와 `tests/helpers/{run_sh_command,package_available}.py`를 지운다. `tests/helpers/run_if.py`를 가져오고 `pyproject.toml`의 pytest 설정, `Makefile`의 `test`/`test-full`, `.github/workflows/test.yml`의 pytest 줄을 반영한다.
-- 영향 경로: `tests/helpers/`, `pyproject.toml`, `Makefile`, `.github/workflows/test.yml`.
+- 다운스트림에서 할 일: `tests/test_template_status.py`가 있으면 지운다. `tests/test_sweeps.py`와 `tests/helpers/{run_sh_command,package_available}.py`, `configs/hparams_search/`를 지우고 위 Optuna 항목을 반영한다(쓰고 있으면 지우지 않는다). `tests/helpers/run_if.py`를 가져오고 `pyproject.toml`의 pytest 설정, `Makefile`의 `test`/`test-full`, `.github/workflows/test.yml`의 pytest 줄을 반영한다.
+- 영향 경로: `configs/{train.yaml,hparams_search}`, `src/{train.py,utils}`, `requirements.txt`, `tests/helpers/`, `pyproject.toml`, `Makefile`, `.github/workflows/test.yml`.
 
 ## v6 (2026-10-06) — CLAUDE.md에 research/ 규칙
 - 변경: `CLAUDE.md` §2에 `research/`는 사용자가 직접 쓰는 폴더이고 AI는 읽기만 한다는 규칙을 추가했다(v5에서 폴더만 만들고 AI 지침이 빠져 있었다).

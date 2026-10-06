@@ -23,7 +23,7 @@ research-template/
 ├── configs/               Hydra 설정
 │   ├── train.yaml, eval.yaml, analyze.yaml      엔트리포인트별 기본 조합
 │   ├── experiment/train/<model>/<YYMMDD_topic>/<YYMMDD-name>.yaml   실험 1개 = 파일 1개
-│   ├── data/ model/ losses/ metrics/ callbacks/ logger/ trainer/ paths/ hydra/ extras/ debug/ hparams_search/
+│   ├── data/ model/ losses/ metrics/ callbacks/ logger/ trainer/ paths/ hydra/ extras/ debug/
 ├── src/
 │   ├── train.py, eval.py, analyze.py            Hydra 엔트리포인트
 │   ├── data/            LightningDataModule (+ components/)
@@ -97,7 +97,7 @@ research-template/
    그다음 `cp .env.example .env`. `PROJECT_NAME` 한 줄이 체크포인트 폴더(`CHECKPOINT_DIR`), sbatch venv 이름, wandb project 기본값을 정한다.
 3. `/scratch2/$USER/venvs/<PROJECT_NAME>`에 venv를 만들고 `requirements.txt`를 설치한다(GPU 클러스터에서는 torch를 먼저, 헤더 설명 참고).
 4. 예제(toy)를 내 것으로 교체한다: `src/data/toy_datamodule.py`, `src/models/toy_module.py`, `configs/{data,model,metrics,losses}/toy*.yaml`,
-   `configs/experiment/train/toy/`, `configs/hparams_search/toy_optuna.yaml`. 모델 config에는 `metrics`(`monitor_metric`/`monitor_mode` 포함)와 `loss`를 유지한다.
+   `configs/experiment/train/toy/`. 모델 config에는 `metrics`(`monitor_metric`/`monitor_mode` 포함)와 `loss`를 유지한다.
 5. `CLAUDE.md` §8(프로젝트별 메모)과 `docs/CONTEXT.md`를 채운다. 외부 코드는 `third_party/`에 submodule로 추가한다.
 6. `make test`.
 
