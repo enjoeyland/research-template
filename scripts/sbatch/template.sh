@@ -1,6 +1,7 @@
 #!/bin/bash
 # Template: train + analyze over a hyperparameter grid.
-# Copy to scripts/, edit axes + run_one / run_analyze, keep the launch_sweep line.
+# Copy to scripts/<model>_train.sh, edit axes + run_one / run_analyze, keep the launch_sweep line.
+# (A launcher of a ONE-OFF study is a different template: template_study.sh, kept next to the study's code.)
 #
 # Layout (one folder per experiment):
 #   logs/runs/<experiment>/checkpoints/seed<N>_epoch_XXX.ckpt
@@ -22,18 +23,20 @@
 #   EXTRA_ARGS="debug=smoke" LOGGER=csv ./scripts/my_sweep.sh   # smoke test: isolated under logs/smoke, never resumes
 set -euo pipefail
 
-# sbatch runs a copy of this file from the slurm spool dir, so locate common/ via SLURM_SUBMIT_DIR
-# (submit from the repo root) when inside a job, and via this file's own path otherwise.
-if [[ -n "${SLURM_SUBMIT_DIR:-}" ]]; then
-  _SBATCH="${SLURM_SUBMIT_DIR}/scripts/sbatch"
-else
-  _HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  if [[ -d "${_HERE}/common" ]]; then
-    _SBATCH="${_HERE}"        # this file still lives in scripts/sbatch/
-  else
-    _SBATCH="${_HERE}/sbatch" # copied to scripts/<name>.sh
-  fi
-fi
+# Locate the repo root at ANY depth (this file may live in scripts/, src/studies/<topic>/ or src/analysis/<topic>/). sbatch runs a COPY
+# of this file from the slurm spool dir, so inside a job the root comes from REPO_ROOT (exported by the submitting shell and carried
+# by --export=ALL) or, for a plain `sbatch`, from the submit directory.
+_find_root() {
+  local d="${1:?}"
+  while [[ "${d}" != "/" && ! -f "${d}/.project-root" ]]; do d="$(dirname "${d}")"; done
+  if [[ -f "${d}/.project-root" ]]; then printf '%s' "${d}"; fi
+  return 0
+}
+REPO_ROOT="${REPO_ROOT:-$(_find_root "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")}"
+REPO_ROOT="${REPO_ROOT:-$(_find_root "${SLURM_SUBMIT_DIR:-${PWD}}")}"
+[[ -n "${REPO_ROOT}" ]] || { echo "error: .project-root not found above this script or the submit directory" >&2; exit 1; }
+export REPO_ROOT
+_SBATCH="${REPO_ROOT}/scripts/sbatch"
 
 : "${PROFILE:=gpu24}"
 : "${JOBS_PER_GPU:=1}"

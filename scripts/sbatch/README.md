@@ -14,6 +14,7 @@ venv는 `$VENV` > `.env`의 `VENV` > `/scratch2/$USER/venvs/<PROJECT_NAME>` 순�
 | `profiles/*.sh` | `cpu`, `gpu24`, `gpu4090`, `gpu48`, `gpu96` (+ `gpu24-cuda118`: TF 전용, `gpu48bio`: 권한 확인 필요) |
 | `check_node_health.sh` | `SLURM_EXCLUDE`에 넣을 불량 노드 재확인 |
 | `template.sh` | 새 스윕 시작용 (복사해서 축만 수정) |
+| `template_study.sh` | 일회성 study 실행기 시작용: `src/studies/<YYMMDD_topic>/run.sh`로 복사해서 `STUDY`, `ITEMS`, `run_one`만 고친다. 결과는 `logs/studies/<주제>/` |
 
 로그: `logs/slurm/<날짜>/<JOB_NAME>_<jobid>*.log`. `SLURM_EXCLUDE`(CUDA 초기화가 실패하는 노드)는 클러스터 공통
 정보이므로 `profiles/*.sh`에 근거 주석과 함께 유지한다. 노드가 불량이면 근거를 갖춰 추가하고, 이후 정상으로
@@ -32,3 +33,10 @@ train job을 제출하기 직전에 `maybe_submit.sh`가 아래를 확인한다.
 | `SLURM_EXCLUDE_EXTRA=nodeXX` (환경변수) | 프로필의 제외 목록에 **이번 제출에만** 노드를 더한다(공유 프로필을 한 번의 실패로 고치지 않기 위해). |
 
 경고와 예상 시각은 제출을 막지 않는다(`TEST_ONLY=1`을 빼면 그대로 제출된다).
+
+## 런처는 어느 깊이에 있어도 된다 (repo 루트 탐색)
+
+`template.sh`와 `template_study.sh`는 맨 위에 같은 스니펫을 가진다: 이 파일에서 위로 올라가며 `.project-root`를 찾아 `REPO_ROOT`를 정하고(`scripts/`, `src/studies/<주제>/`,
+`src/analysis/<주제>/` 어디든), 제출하는 셸이 `REPO_ROOT`를 export하므로 job 안(sbatch는 스크립트의 **사본**을 spool 디렉토리에서 실행한다)에서도 같은 값을 쓴다.
+`sbatch`를 직접 부른 경우에는 제출 디렉토리에서 찾는다. 런처를 새로 만들 때는 템플릿을 복사하면 이 스니펫이 같이 온다(공용 `common/`에 둘 수 없는 이유는
+`common/`의 위치를 알려면 루트를 먼저 알아야 하기 때문이다).

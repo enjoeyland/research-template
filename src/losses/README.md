@@ -38,7 +38,7 @@ loss는 **항(term) 하나 = `nn.Module` 하나**이고, 항들을 `CompositeLos
 ## 아직 규칙으로 다루지 못한 것
 
 loss 선택이 모델 의미까지 바꾸는 경우(예: `gaussian_nll`은 head 출력을 (mean, logvar)로 재해석), loss와 metric이 같은 상수를 쓰는 경우,
-표본 가중치 항. 자세한 내용: `docs/experiments/261004_mccg-port-simulation.md` §6.
+표본 가중치 항. (MCCG SCM cascade를 이 구조로 옮겨 본 `src/studies/261004_mccg-port-sim/`의 "한계" 참고.)
 
 ## 새 항 추가
 

@@ -29,9 +29,9 @@ research-template/
 │   ├── losses/          LossTerm, CompositeLoss, PassBlend, FieldTerm
 │   ├── metrics/         TaskMetrics, MetricGroup, 분류 지표, FieldMean
 │   ├── utils/           콜백(MetricTrends 등), ModelOutput, instantiators, 로깅 유틸
-│   ├── analysis/<YYMMDD_topic>/   재사용 가능한 사후 분석 코드
-│   └── studies/<YYMMDD_topic>/    일회성 검증/진단 코드
-├── scripts/               shell 전용. sbatch/ = SLURM 스윕 인프라 (common/, profiles/, template.sh)
+│   ├── analysis/<YYMMDD_topic>/   반복해서 쓰는 사후 분석 (.py + 필요하면 run.sh + README)
+│   └── studies/<YYMMDD_topic>/    일회성 검증/진단 (.py + run.sh + README 한 폴더). 반복해서 쓰면 analysis/로 승격
+├── scripts/               학습 스윕 실행기 전용(shell). sbatch/ = SLURM 스윕 인프라 (common/, profiles/, template.sh, template_study.sh)
 ├── data/                  무거운 데이터셋의 심볼릭 링크만 (gitignore, README와 .gitkeep만 추적)
 ├── third_party/           외부 코드(git submodule) 전용. repo마다 자기 venv
 ├── docs/                  proposals/ experiments/ implementation/ adr/ figures/ papers/(PDF, gitignore) + CONTEXT.md, README.md
@@ -51,7 +51,8 @@ research-template/
   문서에 실을 것만 `docs/figures/`로 복사(승격)한다. `logs/`는 gitignore이므로 문서가 `logs/`를 직접 링크하지 않는다.
 - 실험 config 경로는 `experiment/train/<model>/<YYMMDD_topic>/<YYMMDD-name>.yaml`. `<model>`은 같은 `configs/model/*.yaml`을 쓰는 계열이고, 스윕
   스크립트 하나(`scripts/<model>_train.sh`)가 한 `<model>`을 담당한다.
-- `scripts/`는 shell 전용(sbatch 스윕 실행기). 분석은 `src/analysis/`, 일회성은 `src/studies/`, 로그는 `logs/studies/`. 새로 만들기 전에 기존 파일부터 확인한다.
+- `scripts/`는 **학습 스윕 실행기 전용**(shell). 분석은 `src/analysis/`, 일회성은 `src/studies/`이고 **그 실행 셸(`run.sh`)은 코드 옆 폴더 안**에 둔다(`scripts/sbatch/template_study.sh` 복사).
+  study를 반복해서 쓰게 되면 `src/analysis/<주제>/`로 폴더째 승격한다. 로그와 그린 그림은 `logs/studies/`. 새로 만들기 전에 기존 파일부터 확인한다.
 - 학습 후 후속 조치는 스윕 스크립트의 `run_analyze()`에 넣어 `--dependency=afterok`로 자동 연결한다. 죽은 학습은 같은 명령으로 재제출하면
   `callbacks=default_resumable`의 `seed<N>_resume.ckpt`와 저장된 wandb id로 이어서 돈다.
 - 스모크 테스트는 `debug=smoke logger=csv` (결과는 `logs/smoke/`로 격리), wandb는 실제 실험에서만.
@@ -120,14 +121,14 @@ JointDLM식 `results.py`, 실험 비교 스크립트(`compare_experiments.py`), 
 ## Consequences
 - 새 프로젝트는 복사 직후 같은 실행 폴더·스윕·재개·loss/metric 구조·문서 규칙을 갖고, 프로젝트별 차이는 `CLAUDE.md` §8과 `docs/CONTEXT.md`에만 쓴다.
 - 대가: 구조 규칙이 많아 처음 읽는 비용이 있고, 템플릿이 갱신되면 기존 프로젝트에는 수동으로 반영해야 한다(`scripts/sbatch/README.md`에 template이 기준임을 명시).
-- 모델-loss 결합(loss 선택이 head 출력 의미를 바꾸는 경우), loss와 metric이 공유하는 상수, 표본 가중치 항은 아직 구조가 규칙으로 다루지 않는다
-  (`docs/experiments/261004_mccg-port-simulation.md` §6).
+- 모델-loss 결합(loss 선택이 head 출력 의미를 바꾸는 경우), loss와 metric이 공유하는 상수, 표본 가중치 항은 아직 구조가 규칙으로 다루지 않는다.
 - `scripts/sbatch/`의 SLURM 불량 노드 목록과 파티션은 클러스터 고유 정보이므로 다른 클러스터에서는 `profiles/`를 고쳐야 한다.
 
 ## 변경 이력
 - 2026-10-04: 최초 작성.
 - 2026-10-05: third_party 사용 방식(세 가지, 한 실험 폴더, 독립 실행 규칙)과 모델 "패턴 2: 어댑터"를 README에 추가.
 - 2026-10-05: 사용법(새 프로젝트 체크리스트, 실행 명령, skills)을 이 문서에 추가 — 최상위 README가 프로젝트 README로 교체되기 때문.
+- 2026-10-06: study/analysis의 실행 셸을 코드 옆(`src/studies|analysis/<주제>/run.sh`)에 두기로 하고(`scripts/`는 학습 스윕 전용), 반복해서 쓰는 study는 `src/analysis/`로 승격. `template_study.sh`와 어느 깊이에서든 repo 루트를 찾는 스니펫 추가.
 - 2026-10-05: GitHub Actions를 최소 CPU 테스트 workflow 하나로 축소.
 - 2026-10-05: `docs/implementation/`(코드 수정 이력) 추가. 캐시 위치를 `src/cache_env.py` 대신 `.env.example`로 이동.
 - 2026-10-04: 모델/loss/metric 규약을 `src/models|losses|metrics/README.md`로 옮기고 CLAUDE.md에서는 삭제(이후 섹션 번호가 한 칸씩 당겨짐: 문서화 §3, 실험 진행 §4, 보고 §5, 그려줘 §6, 파일 관리 §7, 프로젝트별 메모 §8).
