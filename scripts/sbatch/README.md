@@ -27,7 +27,7 @@ train job을 제출하기 직전에 `maybe_submit.sh`가 아래를 확인한다.
 |---|---|
 | `SLURM_CHECK_START=1` (프로필) | 제출 전에 `sbatch --test-only`로 **예상 시작 시각**을 출력한다. 요청이 잘못됐으면 큐에 넣기 전에 여기서 실패한다. **gpu48은 GPU를 받기 어려우므로 기본으로 켜져 있다**: 대기 시간이 길면 gpu24/gpu96으로 바꾸는 것을 고려한다. |
 | `TEST_ONLY=1` (환경변수, 모든 프로필) | 예상 시작 시각만 출력하고 **제출하지 않고 종료**한다: `TEST_ONLY=1 PROFILE=gpu48 ./scripts/<model>_train.sh` |
-| `SLURM_WARN_CONCURRENCY=N` + `SLURM_WARN_AFTER=HH:MM:SS` (프로필) | 동시에 N개 이상 실행될 수 있고 시간 제한이 그보다 길면 **경고**한다. gpu48은 `4` / `03:00:00`: **동시 4개 이상이 3시간을 넘기면 중간에 멈출 수 있다.** `MAX_GPUS=3`으로 동시 수를 낮추거나 `TIME=03:00:00`으로 줄이고, 긴 런은 `callbacks=default_resumable`로 재개 가능하게 한다. 동시 수는 `--array`의 `%MAX_GPUS`에서 센다. |
+| `SLURM_WARN_CONCURRENCY=N` + `SLURM_WARN_AFTER=HH:MM:SS` (프로필) | 동시에 N개 이상 실행될 수 있고 시간 제한이 그보다 길면 **경고**한다. gpu48은 `5` / `03:00:00`: **동시 5개 이상이 3시간을 넘기면 중간에 멈출 수 있다.** `MAX_GPUS=4`로 동시 수를 낮추고, 긴 런은 `callbacks=default_resumable`로 재개 가능하게 한다. 동시 수는 `--array`의 `%MAX_GPUS`에서 센다. |
 | `NODELIST=node45` (환경변수) | train job을 그 노드(들)에서만 돌린다(호스트 RAM이 많이 필요한 job 등). 프로필의 파티션에 없는 노드면 경고한다. analyze job에는 적용하지 않는다. |
 | `SLURM_EXCLUDE_EXTRA=nodeXX` (환경변수) | 프로필의 제외 목록에 **이번 제출에만** 노드를 더한다(공유 프로필을 한 번의 실패로 고치지 않기 위해). |
 

@@ -12,7 +12,7 @@ HYDRA_TRAINER=gpu
 # time; `TEST_ONLY=1 PROFILE=gpu48 ./scripts/<run>.sh` shows it without submitting). The wait can be long enough that another
 # profile (gpu24 / gpu96) is the better choice.
 SLURM_CHECK_START=1
-# With 4 or more allocations running at once, jobs that run past ~3 hours may be stopped midway: preflight.sh warns when a sweep
-# would run that many at once with a longer time limit. Keep MAX_GPUS below 4, shorten TIME, or use callbacks=default_resumable.
-SLURM_WARN_CONCURRENCY=4
+# With 5 or more allocations running at once, jobs that run past ~3 hours may be stopped midway: preflight.sh warns when a sweep
+# would run that many at once with a longer time limit. Keep MAX_GPUS below 5 (4 or fewer at once) or use callbacks=default_resumable.
+SLURM_WARN_CONCURRENCY=5
 SLURM_WARN_AFTER=03:00:00

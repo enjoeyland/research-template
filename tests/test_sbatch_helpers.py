@@ -90,16 +90,17 @@ def test_time_to_seconds(value, seconds) -> None:
     assert _preflight(f'time_to_seconds "{value}"').stdout.strip() == str(seconds)
 
 
-_GPU48 = {"PROFILE_NAME": "gpu48", "SLURM_WARN_CONCURRENCY": "4", "SLURM_WARN_AFTER": "03:00:00"}
+_GPU48 = {"PROFILE_NAME": "gpu48", "SLURM_WARN_CONCURRENCY": "5", "SLURM_WARN_AFTER": "03:00:00"}
 
 
 @pytest.mark.parametrize(
     "array, time_limit, warns",
     [
-        ("0-9%4", "24:00:00", True),   # 4 at once and longer than 3h
-        ("0-9%3", "24:00:00", False),  # only 3 at once
-        ("0-9%4", "03:00:00", False),  # exactly 3h is not longer than 3h
-        ("0-3", "05:00:00", True),     # no throttle: all 4 tasks run at once
+        ("0-9%5", "24:00:00", True),   # 5 at once and longer than 3h
+        ("0-9%4", "24:00:00", False),  # only 4 at once
+        ("0-9%5", "03:00:00", False),  # exactly 3h is not longer than 3h
+        ("0-4", "05:00:00", True),     # no throttle: all 5 tasks run at once
+        ("0-3", "05:00:00", False),    # no throttle, only 4 tasks
         ("", "24:00:00", False),       # a single job
     ],
 )

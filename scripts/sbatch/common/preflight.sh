@@ -77,7 +77,7 @@ preflight_warn_concurrency() {
     {
       echo "WARNING: profile ${PROFILE_NAME}: up to ${conc} allocations may run at once (>= ${n}) with --time=${2} (> ${after})."
       echo "         Jobs may be stopped midway once they run longer than ${after}. Lower the concurrency (MAX_GPUS=$((n - 1)))"
-      echo "         or the time limit (TIME=${after}), and make long runs resumable (callbacks=default_resumable)."
+      echo "         and make long runs resumable (callbacks=default_resumable)."
     } >&2
   fi
 }
