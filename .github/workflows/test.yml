@@ -29,4 +29,5 @@ jobs:
           pip install -r requirements.txt
 
       - name: Test
-        run: pytest -k "not slow" -q -o log_cli=false
+        # .template/tests exists only in the template repo itself (make rename deletes it in a project)
+        run: pytest -k "not slow" -q -o log_cli=false tests src $( [ -d .template/tests ] && echo .template/tests )

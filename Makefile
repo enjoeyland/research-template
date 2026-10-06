@@ -20,11 +20,11 @@ sync: ## Merge changes from main branch to your current branch
 	git pull
 	git pull origin main
 
-test: ## Run not slow tests
-	pytest -k "not slow"
+test: ## Run not slow tests (+ .template/tests when it exists: template repo only)
+	pytest -k "not slow" tests src $(wildcard .template/tests)
 
 test-full: ## Run all tests
-	pytest
+	pytest tests src $(wildcard .template/tests)
 
 train: ## Train with default config
 	python src/train.py

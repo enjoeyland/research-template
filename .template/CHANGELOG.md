@@ -3,6 +3,14 @@
 다운스트림에 영향이 있는 변경 **묶음마다 한 번** 버전을 올린다(규칙: [MAINTAINING.md](MAINTAINING.md)). 프로젝트는 `make template-status`로 자기 버전(`.template-version`)과
 최신을 비교한다. 각 버전의 태그는 `template-vN`이다. 항목마다 **다운스트림에서 할 일**과 **영향 경로**를 적는다.
 
+## v7 (2026-10-06) — 테스트 정리
+- 변경: template 전용 테스트(`test_template_status.py`: `make rename`, 버전·changelog 일관성, template-status)를 `tests/`에서 `.template/tests/`로 옮겼다(`make rename`이 폴더째 지우므로 프로젝트에는 안 간다).
+  `make test`와 CI는 `tests src`(+ `.template/tests`가 있으면 그것도)를 돌린다. `pytest . .template/tests`는 하위 경로를 중복으로 보고 빼 버려서 폴더를 따로 나열한다.
+- 삭제: `tests/helpers/{run_if,package_available}.py`에서 쓰이지 않는 플래그(tpu, fairscale, deepspeed, neptune, comet, mlflow, skip_windows, min_torch, max_torch, min_python).
+- 변경: `pyproject.toml`의 pytest 설정에 `pythonpath = ["."]`, `minversion = "7.0"`(`tests/` 밖의 테스트가 `src`를 import할 수 있게).
+- 다운스트림에서 할 일: `tests/test_template_status.py`가 있으면 지운다. `tests/helpers/`를 가져오고 `pyproject.toml`의 pytest 설정, `Makefile`의 `test`/`test-full`, `.github/workflows/test.yml`의 pytest 줄을 반영한다.
+- 영향 경로: `tests/helpers/`, `pyproject.toml`, `Makefile`, `.github/workflows/test.yml`.
+
 ## v6 (2026-10-06) — CLAUDE.md에 research/ 규칙
 - 변경: `CLAUDE.md` §2에 `research/`는 사용자가 직접 쓰는 폴더이고 AI는 읽기만 한다는 규칙을 추가했다(v5에서 폴더만 만들고 AI 지침이 빠져 있었다).
 - 다운스트림에서 할 일: v5의 `research/`를 쓰는 프로젝트는 `CLAUDE.md`에 같은 항목을 옮긴다.

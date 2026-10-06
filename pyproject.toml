@@ -13,7 +13,9 @@ log_cli = "True"
 markers = [
   "slow: slow tests",
 ]
-minversion = "6.0"
+minversion = "7.0"
+# lets tests outside tests/ (e.g. the template-only .template/tests/) import `src`
+pythonpath = ["."]
 testpaths = "tests/"
 
 [tool.coverage.report]

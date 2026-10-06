@@ -1,6 +1,6 @@
 # Which version of the template this project was created from / last synced with. Compare with the template: `make template-status`.
 # After applying the template's changes to this project: `make template-mark-synced`.
-version: 6
+version: 7
 url: https://github.com/enjoeyland/research-template
 # Template-owned paths: a project normally does not edit these, so `make template-status` suggests diffing them between versions.
 owned: scripts/sbatch src/utils src/losses src/metrics tests/helpers configs/callbacks configs/hydra configs/paths configs/debug configs/logger configs/trainer configs/extras .github/workflows

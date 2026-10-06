@@ -27,6 +27,11 @@
 4. 커밋 뒤에 태그 `template-vN`을 단다(`git tag template-vN`). 태그를 원격에 올리는 `git push --tags`는 사용자에게 확인하고 push할 때 같이 한다.
 5. `DOWNSTREAM.md`에서 프로젝트별로 영향이 있는지 본다.
 
+## 테스트
+
+- **template 전용 테스트는 `.template/tests/`에 둔다**(`make rename`, 버전·changelog 일관성, `make template-status`). `make test`와 CI가 이 폴더가 있으면 같이 돌리고,
+  `make rename`이 폴더째 지우므로 프로젝트의 `tests/`에는 들어가지 않는다. 프로젝트에서도 쓰는 기능의 테스트(`tests/`)와 구분한다.
+
 ## 검증 (template 변경은 "내 환경에서만 돌아간다"가 되기 쉽다)
 
 - **깨끗한 clone에서 사용 체크리스트를 그대로 따라 한다**: `git clone`, `cp .env.example .env`, `make test`, toy smoke(`debug=smoke logger=csv`).

@@ -1,4 +1,5 @@
-"""`make template-status` (src/template_status.py) and `make rename`'s handling of the template-only folder."""
+"""Template-only tests (this folder is deleted by `make rename`, so projects never carry them): `make template-status`
+(src/template_status.py), the template's own version bookkeeping, and `make rename`. Run by `make test` / CI when present."""
 
 import platform
 import shutil
@@ -9,7 +10,7 @@ import pytest
 
 from src import template_status as ts
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 
 CHANGELOG = """# Template 변경 이력
 
@@ -86,18 +87,13 @@ def test_missing_marker_and_unreadable_changelog_fail_cleanly(tmp_path, monkeypa
     assert "could not read" in capsys.readouterr().err
 
 
-# ---- the template repo's own bookkeeping (these files are deleted in a project, so skip there) ----
-_HAS_TEMPLATE_DIR = (ROOT / ".template" / "CHANGELOG.md").is_file()
-
-
-@pytest.mark.skipif(not _HAS_TEMPLATE_DIR, reason="a project created from the template has no .template/")
+# ---- the template repo's own bookkeeping ----
 def test_template_version_matches_the_latest_changelog_entry() -> None:
     marker = ts.read_marker(ROOT / ts.MARKER)
     entries = ts.parse_changelog((ROOT / ".template" / "CHANGELOG.md").read_text())
     assert int(marker["version"]) == entries[0].version, "bump `.template-version` together with CHANGELOG.md"
 
 
-@pytest.mark.skipif(not _HAS_TEMPLATE_DIR, reason="a project created from the template has no .template/")
 def test_every_changelog_entry_says_what_downstream_has_to_do() -> None:
     for entry in ts.parse_changelog((ROOT / ".template" / "CHANGELOG.md").read_text()):
         assert "다운스트림에서 할 일" in entry.body and "영향 경로" in entry.body, f"v{entry.version}"
