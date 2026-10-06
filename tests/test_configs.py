@@ -107,3 +107,18 @@ def test_resumable_callbacks_build_for_any_max_epochs(monkeypatch) -> None:
         callbacks = instantiate_callbacks(cfg.callbacks)
         Trainer(callbacks=callbacks, max_epochs=max_epochs, accelerator="cpu", logger=False)  # validates the callbacks
     GlobalHydra.instance().clear()
+
+
+def test_file_loggers_write_one_folder_per_seed() -> None:
+    """Seeds of one experiment share a run dir and may start together; an auto-numbered version_N is chosen without a lock,
+    so two tasks would both take version_0 and write the same metrics.csv."""
+    from hydra import compose, initialize
+    from hydra.core.global_hydra import GlobalHydra
+
+    for logger in ("csv", "tensorboard"):
+        for seed in (0, 7):
+            GlobalHydra.instance().clear()
+            with initialize(version_base="1.3", config_path="../configs"):
+                cfg = compose(config_name="train.yaml", overrides=[f"logger={logger}", f"seed={seed}"])
+            assert cfg.logger[logger].version == f"seed{seed}", (logger, seed)
+    GlobalHydra.instance().clear()

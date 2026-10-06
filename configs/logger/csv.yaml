@@ -4,4 +4,8 @@ csv:
   _target_: lightning.pytorch.loggers.csv_logs.CSVLogger
   save_dir: "${paths.output_dir}"
   name: "csv/"
+  # One folder per seed: seeds of an experiment share one run dir and may start at the same moment. The default (auto-numbered
+  # version_N) is picked without a lock, so two tasks starting together both take version_0 and write the SAME metrics.csv
+  # (ValueError: dict contains fields not in fieldnames). A fixed per-seed version also makes a resumed run append to its own file.
+  version: "seed${seed}"
   prefix: ""

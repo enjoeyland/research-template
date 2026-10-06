@@ -7,4 +7,4 @@ tensorboard:
   log_graph: False
   default_hp_metric: True
   prefix: ""
-  # version: ""
+  version: "seed${seed}" # one folder per seed (see csv.yaml): seeds of an experiment may start at the same moment

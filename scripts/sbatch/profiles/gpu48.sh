@@ -8,3 +8,11 @@ SLURM_QOS=big_qos
 SLURM_GRES=gpu:1
 SLURM_TIME=24:00:00
 HYDRA_TRAINER=gpu
+# 48GB GPUs are comparatively hard to get: check the wait before queuing (preflight.sh prints `sbatch --test-only`'s estimated start
+# time; `TEST_ONLY=1 PROFILE=gpu48 ./scripts/<run>.sh` shows it without submitting). The wait can be long enough that another
+# profile (gpu24 / gpu96) is the better choice.
+SLURM_CHECK_START=1
+# With 4 or more allocations running at once, jobs that run past ~3 hours may be stopped midway: preflight.sh warns when a sweep
+# would run that many at once with a longer time limit. Keep MAX_GPUS below 4, shorten TIME, or use callbacks=default_resumable.
+SLURM_WARN_CONCURRENCY=4
+SLURM_WARN_AFTER=03:00:00

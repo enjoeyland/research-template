@@ -61,3 +61,58 @@ def test_checkpoint_dir_points_at_the_smoke_tree_for_debug_smoke_only(tmp_path) 
     assert _bash("checkpoint_dir exp1", _env(tmp_path, "debug=default")) == f"{tmp_path}/runs/exp1/checkpoints"
     out = _bash('prepare_resume exp1 0 n 2>/dev/null; echo "[${RESUME_ARGS[*]}]"', _env(tmp_path, "debug=default"))
     assert out == "[]"
+
+
+def _preflight(body: str, env_extra: dict | None = None) -> subprocess.CompletedProcess:
+    import os
+
+    env = dict(os.environ)
+    env.update(env_extra or {})
+    return subprocess.run(
+        ["bash", "-c", "source scripts/sbatch/common/preflight.sh; " + body],
+        cwd=ROOT, env=env, capture_output=True, text=True,
+    )
+
+
+@pytest.mark.parametrize(
+    "spec, expected",
+    [("", 1), ("0-3", 4), ("0-14%4", 4), ("0-14%20", 15), ("0,2,5", 3), ("0,2,5%2", 2), ("0-9:2", 5)],
+)
+def test_array_concurrency(spec, expected) -> None:
+    assert _preflight(f'array_concurrency "{spec}"').stdout.strip() == str(expected)
+
+
+@pytest.mark.parametrize(
+    "value, seconds",
+    [("03:00:00", 10800), ("24:00:00", 86400), ("1-00:00:00", 86400), ("30:00", 1800), ("45", 2700)],
+)
+def test_time_to_seconds(value, seconds) -> None:
+    assert _preflight(f'time_to_seconds "{value}"').stdout.strip() == str(seconds)
+
+
+_GPU48 = {"PROFILE_NAME": "gpu48", "SLURM_WARN_CONCURRENCY": "4", "SLURM_WARN_AFTER": "03:00:00"}
+
+
+@pytest.mark.parametrize(
+    "array, time_limit, warns",
+    [
+        ("0-9%4", "24:00:00", True),   # 4 at once and longer than 3h
+        ("0-9%3", "24:00:00", False),  # only 3 at once
+        ("0-9%4", "03:00:00", False),  # exactly 3h is not longer than 3h
+        ("0-3", "05:00:00", True),     # no throttle: all 4 tasks run at once
+        ("", "24:00:00", False),       # a single job
+    ],
+)
+def test_concurrency_warning_only_when_both_conditions_hold(array, time_limit, warns) -> None:
+    out = _preflight(f'preflight_warn_concurrency "{array}" "{time_limit}"', _GPU48)
+    assert ("WARNING" in out.stderr) == warns, out.stderr
+
+
+def test_no_warning_without_profile_knobs() -> None:
+    out = _preflight('preflight_warn_concurrency "0-9%8" "24:00:00"', {"PROFILE_NAME": "gpu24"})
+    assert out.stderr == ""
+
+
+def test_profile_knobs_do_not_leak_between_profiles() -> None:
+    out = _preflight("SLURM_CHECK_START=1; SLURM_WARN_AFTER=03:00:00; preflight_reset_knobs; echo \"[${SLURM_CHECK_START:-}${SLURM_WARN_AFTER:-}]\"")
+    assert out.stdout.strip() == "[]"
