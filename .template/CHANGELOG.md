@@ -3,6 +3,11 @@
 다운스트림에 영향이 있는 변경 **묶음마다 한 번** 버전을 올린다(규칙: [MAINTAINING.md](MAINTAINING.md)). 프로젝트는 `make template-status`로 자기 버전(`.template-version`)과
 최신을 비교한다. 각 버전의 태그는 `template-vN`이다. 항목마다 **다운스트림에서 할 일**과 **영향 경로**를 적는다.
 
+## v6 (2026-10-06) — CLAUDE.md에 research/ 규칙
+- 변경: `CLAUDE.md` §2에 `research/`는 사용자가 직접 쓰는 폴더이고 AI는 읽기만 한다는 규칙을 추가했다(v5에서 폴더만 만들고 AI 지침이 빠져 있었다).
+- 다운스트림에서 할 일: v5의 `research/`를 쓰는 프로젝트는 `CLAUDE.md`에 같은 항목을 옮긴다.
+- 영향 경로: `CLAUDE.md`.
+
 ## v5 (2026-10-06) — 사용자 소유 폴더 research/
 - 추가: `research/`(사용자가 직접 쓰는 논의·논문 정리 폴더; AI는 읽기만, 요청이 있을 때만 수정). `YYMMDD_<주제>/`마다 `YYMMDD_<주제>.md` + `YYMMDD_<주제>.pptx` + `figures/`(파일 이름에 주제를 넣어
   따로 내려받아도 알 수 있게), `_TEMPLATE/YYMMDD_topic.md`(글 템플릿), `research/paper/`는 gitignore(별도 repo).

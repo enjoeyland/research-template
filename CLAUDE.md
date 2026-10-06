@@ -100,6 +100,8 @@ srun --partition="$SLURM_PARTITION" --qos="$SLURM_QOS" --gres="$SLURM_GRES" \
 - 문서는 용도별로 나눈다: 제안/설계/예상은 `docs/proposals/`, 실행 기록/결과/해석은 `docs/experiments/`,
   결정 기록은 `docs/adr/`. 파일명은 `YYMMDD_주제.md`. **`proposals/`에는 실험 결과(실측 수치, 예상과의 비교)를
   쓰지 않고 `experiments/`에만 쓴다.**
+- **`research/`는 사용자가 직접 쓰는 폴더**다(다른 사람과의 논의, 논문 정리: `research/YYMMDD_<주제>/`마다 `YYMMDD_<주제>.md` + `.pptx` + `figures/`).
+  **읽기만 하고, 사용자가 요청할 때만 수정한다**(만들거나 "정리"하지 않는다). 근거를 점검해 달라고 하면 읽고 채팅이나 `docs/`에 답한다. 구조와 이름 규칙은 `research/README.md`.
 
 ## 3. 문서화
 
