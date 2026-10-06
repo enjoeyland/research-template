@@ -32,7 +32,7 @@ research-template/
 │   ├── analysis/<YYMMDD_topic>/   반복해서 쓰는 사후 분석 (.py + 필요하면 run.sh + README)
 │   └── studies/<YYMMDD_topic>/    일회성 검증/진단 (.py + run.sh + README 한 폴더). 반복해서 쓰면 analysis/로 승격
 ├── scripts/               학습 스윕 실행기 전용(shell). sbatch/ = SLURM 스윕 인프라 (common/, profiles/, template.sh, template_study.sh)
-├── data/                  무거운 데이터셋의 심볼릭 링크만 (gitignore, README와 .gitkeep만 추적)
+├── data/                  무거운 데이터셋의 심볼릭 링크만 (gitignore, README만 추적)
 ├── third_party/           외부 코드(git submodule) 전용. repo마다 자기 venv
 ├── docs/                  proposals/ experiments/ implementation/ adr/ figures/ papers/(PDF, gitignore) + CONTEXT.md, README.md
 ├── logs/                  실행 산출물 (gitignore). runs/<experiment>/{train,eval,analyze,checkpoints}가 한곳에,
