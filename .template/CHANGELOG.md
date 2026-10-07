@@ -3,6 +3,13 @@
 다운스트림에 영향이 있는 변경 **묶음마다 한 번** 버전을 올린다(규칙: [MAINTAINING.md](MAINTAINING.md)). 프로젝트는 `make template-status`로 자기 버전(`.template-version`)과
 최신을 비교한다. 각 버전의 태그는 `template-vN`이다. 항목마다 **다운스트림에서 할 일**과 **영향 경로**를 적는다.
 
+## v8 (2026-10-07) — QOS 덮어쓰기, gpu48 기본 base_qos
+- 추가: `maybe_submit.sh`에 `QOS` 환경변수. train job만 프로필의 `SLURM_QOS` 대신 그 값을 쓴다(analyze는 프로필 값 유지). 출력의 `qos=`와 `--test-only`도 덮어쓴 값을 쓴다.
+  (HMM_Watermarking에서 먼저 만든 것을 일반화해 가져왔다.)
+- 변경: `profiles/gpu48.sh`의 기본 QOS를 `big_qos`에서 `base_qos`로. `--test-only` 기준 예상 시작이 big_qos 10월 9일 07:15, base_qos 10월 8일 01:19로 약 30시간 빨랐다.
+- 다운스트림에서 할 일: `scripts/sbatch/common/maybe_submit.sh`와 `profiles/gpu48.sh`를 가져온다. `scripts/sbatch/README.md`의 `QOS` 줄도 반영한다. gpu48에서 big_qos가 필요하면 `QOS=big_qos`로 덮어쓴다.
+- 영향 경로: `scripts/sbatch/{common/maybe_submit.sh,profiles/gpu48.sh,README.md}`.
+
 ## v7 (2026-10-06) — 테스트 정리
 - 변경: template 전용 테스트(`test_template_status.py`: `make rename`, 버전·changelog 일관성, template-status)를 `tests/`에서 `.template/tests/`로 옮겼다(`make rename`이 폴더째 지우므로 프로젝트에는 안 간다).
   `make test`와 CI는 `tests src`(+ `.template/tests`가 있으면 그것도)를 돌린다. `pytest . .template/tests`는 하위 경로를 중복으로 보고 빼 버려서 폴더를 따로 나열한다.

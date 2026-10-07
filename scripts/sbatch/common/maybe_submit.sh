@@ -18,9 +18,10 @@
 #     start until the slowest of several unrelated experiments in one sweep had finished.
 #   - Otherwise → load profiles/<PROFILE>.sh and sbatch the top-level run script, then exit
 #
-# Overrides (env): PROFILE, ARRAY, JOB_NAME, TIME, OUTPUT, JOBS_PER_GPU, SLURM_EXCLUDE, SLURM_EXCLUDE_EXTRA, NODELIST,
+# Overrides (env): PROFILE, ARRAY, JOB_NAME, TIME, OUTPUT, JOBS_PER_GPU, SLURM_EXCLUDE, SLURM_EXCLUDE_EXTRA, NODELIST, QOS,
 #                  SUBMIT_ANALYZE, ANALYZE_PROFILE, PHASE, ANALYZE_GROUPS (array), TEST_ONLY
 #   NODELIST=node45   run the train job on these node(s) only (e.g. a job that needs a lot of host RAM); not applied to analyze
+#   QOS=base_qos      submit the train job with this QOS instead of the profile's (e.g. big_qos for gpu48); not applied to analyze
 #   TEST_ONLY=1       print the estimated start time (sbatch --test-only) and exit without submitting
 # Before a train job is submitted, common/preflight.sh checks NODELIST, warns about risky concurrency and (for profiles that
 # ask for it, like gpu48) prints the estimated start time.
@@ -88,6 +89,15 @@ _effective_nodelist() {
   echo "${NODELIST:-}"
 }
 
+# --qos value: QOS overrides the profile's SLURM_QOS for the TRAIN job only (the analyze job keeps its own profile's QOS).
+_effective_qos() {
+  if [[ "${PHASE:-train}" == "analyze" || -z "${QOS:-}" ]]; then
+    echo "${SLURM_QOS}"
+  else
+    echo "${QOS}"
+  fi
+}
+
 # Fill _sbatch_args (and _resolved_time / _resolved_nodelist) from the currently sourced profile + JOB_NAME/ARRAY/TIME/OUTPUT.
 _build_sbatch_args() {
   _resolved_time="${TIME:-${SLURM_TIME}}"
@@ -105,7 +115,7 @@ _build_sbatch_args() {
   _sbatch_args=(
     -J "${JOB_NAME}"
     -p "${SLURM_PARTITION}"
-    -q "${SLURM_QOS}"
+    -q "$(_effective_qos)"
     --time="${_resolved_time}"
     --output="${output}"
   )
@@ -115,7 +125,7 @@ _build_sbatch_args() {
   [[ -n "${_resolved_nodelist}" ]] && _sbatch_args+=(--nodelist="${_resolved_nodelist}")
   [[ -n "${ARRAY:-}" ]] && _sbatch_args+=(--array="${ARRAY}")
 
-  echo "profile=${PROFILE_NAME} partition=${SLURM_PARTITION} qos=${SLURM_QOS} gres=${SLURM_GRES:-(none)} exclude=${excl:-(none)} nodelist=${_resolved_nodelist:-(any)} time=${_resolved_time} jobs_per_gpu=${JOBS_PER_GPU} phase=${PHASE:-train}"
+  echo "profile=${PROFILE_NAME} partition=${SLURM_PARTITION} qos=$(_effective_qos) gres=${SLURM_GRES:-(none)} exclude=${excl:-(none)} nodelist=${_resolved_nodelist:-(any)} time=${_resolved_time} jobs_per_gpu=${JOBS_PER_GPU} phase=${PHASE:-train}"
   echo "output=${output}"
 }
 
